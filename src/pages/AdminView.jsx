@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { getSession, updatePhase, getGroups } from '../lib/api'
 import { getOrCreateUserToken } from '../lib/supabase'
 import { supabase } from '../lib/supabase'
+import { getGeminiKey, setGeminiKey } from '../lib/atlasEngine'
 import PhaseNav from '../components/PhaseNav'
 import Phase1Capture from '../components/Phase1Capture'
 import Phase2Synthesis from '../components/Phase2Synthesis'
@@ -15,6 +16,29 @@ export default function AdminView() {
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
   const isAdmin = localStorage.getItem(`atlas_admin_${sessionId}`) === 'true'
+
+  // Master Key Logic
+  const [showSettings, setShowSettings] = useState(false)
+  const [apiKeyInput, setApiKeyInput] = useState('')
+  const [keySaved, setKeySaved] = useState(false)
+
+  useEffect(() => {
+    const savedKey = getGeminiKey()
+    if (savedKey) {
+      setApiKeyInput(savedKey.substring(0, 8) + '****************')
+    }
+  }, [])
+
+  const handleSaveKey = (e) => {
+    e.preventDefault()
+    if (!apiKeyInput.trim()) return
+    setGeminiKey(apiKeyInput.trim())
+    setKeySaved(true)
+    setTimeout(() => {
+      setKeySaved(false)
+      setShowSettings(false)
+    }, 1500)
+  }
 
   useEffect(() => {
     const load = async () => {
@@ -75,7 +99,60 @@ export default function AdminView() {
   const votingUrl = `${window.location.origin}/vote/${sessionId}`
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--paper)', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--paper)', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      {/* Settings Modal */}
+      {showSettings && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.4)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '24px'
+        }}>
+          <div className="card animate-pop" style={{ maxWidth: '400px', width: '100%', padding: '32px' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '8px' }}>Configuración IA</h3>
+            <p style={{ fontSize: '0.875rem', color: 'var(--ink-muted)', marginBottom: '24px' }}>
+              Actualiza tu API Key de Gemini para esta sesión.
+            </p>
+            
+            <form onSubmit={handleSaveKey}>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--stone)', marginBottom: '8px', display: 'block' }}>
+                  Gemini API Key
+                </label>
+                <input 
+                  type="password"
+                  className="input"
+                  placeholder="AIzaSy..."
+                  value={apiKeyInput}
+                  onChange={e => setApiKeyInput(e.target.value)}
+                  style={{ fontSize: '0.9rem', padding: '14px' }}
+                />
+              </div>
+
+              {keySaved && (
+                <div style={{ color: '#059669', fontSize: '0.875rem', background: '#ECFDF5', padding: '12px', borderRadius: '10px', marginBottom: '16px', textAlign: 'center' }}>
+                  ✅ ¡Llave guardada!
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="submit" className="btn-yellow" style={{ flex: 1, padding: '14px' }}>
+                  Actualizar
+                </button>
+                <button type="button" className="btn-ghost" onClick={() => setShowSettings(false)} style={{ flex: 1 }}>
+                  Cerrar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Top bar */}
       <header style={{
         background: 'var(--white)',
@@ -104,24 +181,47 @@ export default function AdminView() {
           </div>
         </div>
 
-        {/* Session code */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--ink-muted)', marginBottom: '4px', fontWeight: 600, letterSpacing: '0.05em' }}>
-              CÓDIGO DE SESIÓN
+        {/* Session code & settings */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--ink-muted)', marginBottom: '4px', fontWeight: 600, letterSpacing: '0.05em' }}>
+                CÓDIGO DE SESIÓN
+              </div>
+              <div style={{
+                fontFamily: 'monospace',
+                fontSize: '1.4rem',
+                fontWeight: 800,
+                letterSpacing: '0.25em',
+                background: 'var(--postit)',
+                padding: '6px 16px',
+                borderRadius: '10px',
+                boxShadow: '0 2px 8px var(--postit-shadow)',
+              }}>
+                {session.code}
+              </div>
             </div>
-            <div style={{
-              fontFamily: 'monospace',
-              fontSize: '1.4rem',
-              fontWeight: 800,
-              letterSpacing: '0.25em',
-              background: 'var(--postit)',
-              padding: '6px 16px',
-              borderRadius: '10px',
-              boxShadow: '0 2px 8px var(--postit-shadow)',
-            }}>
-              {session.code}
-            </div>
+            {isAdmin && (
+              <button 
+                onClick={() => setShowSettings(true)}
+                style={{
+                  background: 'white',
+                  border: '1.5px solid var(--stone-light)',
+                  borderRadius: '50%',
+                  width: '40px',
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.1rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                }}
+                title="Configuración IA"
+              >
+                ⚙️
+              </button>
+            )}
           </div>
           {isAdmin && (
             <button

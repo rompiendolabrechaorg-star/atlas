@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createSession, getSessionByCode } from '../lib/api'
 import { getOrCreateUserToken } from '../lib/supabase'
+import { getGeminiKey, setGeminiKey } from '../lib/atlasEngine'
 
 export default function LandingPage() {
   const navigate = useNavigate()
@@ -13,7 +14,36 @@ export default function LandingPage() {
   const [context, setContext] = useState('')
   const [createStep, setCreateStep] = useState(1) // 1: Info, 2: Context input
 
+  // Master Key Logic
+  const [showSettings, setShowSettings] = useState(false)
+  const [apiKeyInput, setApiKeyInput] = useState('')
+  const [keySaved, setKeySaved] = useState(false)
+
+  useEffect(() => {
+    const savedKey = getGeminiKey()
+    if (savedKey) {
+      setApiKeyInput(savedKey.substring(0, 8) + '****************')
+    }
+  }, [])
+
+  const handleSaveKey = (e) => {
+    e.preventDefault()
+    if (!apiKeyInput.trim()) return
+    setGeminiKey(apiKeyInput.trim())
+    setKeySaved(true)
+    setTimeout(() => {
+      setKeySaved(false)
+      setShowSettings(false)
+    }, 1500)
+  }
+
   const handleCreate = async () => {
+    if (!getGeminiKey()) {
+      setError('⚠️ Necesitas configurar tu API Key de Gemini en el panel de Ajustes (icono ⚙️) para usar las funciones de IA.')
+      setShowSettings(true)
+      return
+    }
+
     if (createStep === 1) {
       setCreateStep(2)
       return
@@ -61,7 +91,89 @@ export default function LandingPage() {
       alignItems: 'center',
       justifyContent: 'center',
       padding: '24px',
+      position: 'relative'
     }}>
+      {/* Settings Button */}
+      <button 
+        onClick={() => setShowSettings(true)}
+        style={{
+          position: 'absolute',
+          top: '24px',
+          right: '24px',
+          background: 'white',
+          border: '1.5px solid var(--stone-light)',
+          borderRadius: '50%',
+          width: '44px',
+          height: '44px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '1.2rem',
+          cursor: 'pointer',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+          zIndex: 100
+        }}
+      >
+        ⚙️
+      </button>
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.4)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '24px'
+        }}>
+          <div className="card animate-pop" style={{ maxWidth: '400px', width: '100%', padding: '32px' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '8px' }}>Configuración IA</h3>
+            <p style={{ fontSize: '0.875rem', color: 'var(--ink-muted)', marginBottom: '24px' }}>
+              Introduce tu API Key de Gemini. Se guardará de forma segura en tu navegador.
+            </p>
+            
+            <form onSubmit={handleSaveKey}>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--stone)', marginBottom: '8px', display: 'block' }}>
+                  Gemini API Key
+                </label>
+                <input 
+                  type="password"
+                  className="input"
+                  placeholder="AIzaSy..."
+                  value={apiKeyInput}
+                  onChange={e => setApiKeyInput(e.target.value)}
+                  style={{ fontSize: '0.9rem', padding: '14px' }}
+                />
+              </div>
+
+              {keySaved && (
+                <div style={{ color: '#059669', fontSize: '0.875rem', background: '#ECFDF5', padding: '12px', borderRadius: '10px', marginBottom: '16px', textAlign: 'center' }}>
+                  ✅ ¡Llave guardada correctamente!
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button type="submit" className="btn-yellow" style={{ flex: 1, padding: '14px' }}>
+                  Guardar
+                </button>
+                <button type="button" className="btn-ghost" onClick={() => setShowSettings(false)} style={{ flex: 1 }}>
+                  Cerrar
+                </button>
+              </div>
+            </form>
+
+            <p style={{ marginTop: '24px', fontSize: '0.75rem', color: 'var(--stone)', textAlign: 'center' }}>
+              ¿No tienes una? Consíguela en <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" style={{ color: 'var(--ink)', fontWeight: 600 }}>Google AI Studio</a>
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '56px' }} className="animate-fade-up">
         <div style={{

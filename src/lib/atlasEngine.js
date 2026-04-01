@@ -1,25 +1,36 @@
 import { supabase } from './supabase'
 import { GoogleGenerativeAI } from "@google/generative-ai"
 
-// Initialize Gemini with the actual API KEY for the rescue build
-const genAI = new GoogleGenerativeAI("AIzaSyD2F6NrG-Ee4EfeFwR3QGyF-W8X5nNYzWY")
+/**
+ * Get the API Key from localStorage
+ */
+export const getGeminiKey = () => localStorage.getItem('atlas_gemini_key')
+export const setGeminiKey = (key) => localStorage.setItem('atlas_gemini_key', key)
 
 /**
- * Atlas Engine handles all logic that used to be in the backend
- * by calling Supabase and Gemini directly from the client.
+ * Initialize Gemini dynamically
  */
-console.log("🚀 Atlas Engine v1.0.2 - API Estable Cargada")
+const getModel = (modelName = "gemini-2.0-flash") => {
+  const key = getGeminiKey()
+  if (!key) throw new Error("API_KEY_MISSING")
+  const genAI = new GoogleGenerativeAI(key)
+  return genAI.getGenerativeModel({ model: modelName }, { apiVersion: "v1" })
+}
+
+/**
+ * Atlas Engine handles all logic from the client.
+ */
+console.log("🚀 Atlas Engine 2.1 - Master Key System Active")
+
 export const atlasEngine = {
   
   /**
    * Create a new session record in Supabase
    */
   async createSession(adminId, context, voteLimit) {
-    // 1. Generate unique code
     const code = Math.random().toString(36).substring(2, 8).toUpperCase()
     const sessionId = window.crypto.randomUUID()
 
-    // 2. Insert into Supabase
     const { data, error } = await supabase.from('sessions').insert({
       id: sessionId,
       admin_id: adminId,
@@ -31,7 +42,6 @@ export const atlasEngine = {
 
     if (error) throw error
 
-    // 3. Create default groups (optional, but keep consistent with previous logic)
     const groups = ['Grupo A', 'Grupo B', 'Grupo C', 'Grupo D'].map(name => ({
       id: window.crypto.randomUUID(),
       session_id: sessionId,
@@ -46,7 +56,7 @@ export const atlasEngine = {
    * Analyze group images using Gemini OCR
    */
   async analyzeImages(sessionId, groupId, files) {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }, { apiVersion: "v1" })
+    const model = getModel("gemini-2.0-flash")
 
     const prompt = `
       Analiza estas imágenes de post-its de una sesión de ideación.
@@ -54,7 +64,6 @@ export const atlasEngine = {
       Devuelve SOLO un JSON con este formato: {"ideas": ["idea1", "idea2", ...]}
     `
 
-    // Convert files to base64 parts for Gemini
     const imageParts = await Promise.all(
       files.map(async file => {
         const base64 = await toBase64(file)
@@ -71,11 +80,9 @@ export const atlasEngine = {
     const response = await result.response
     const text = response.text()
     
-    // Clean JSON from response
     const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim()
     const { ideas } = JSON.parse(jsonStr)
 
-    // Insert ideas into Supabase
     const ideaObjects = ideas.map(content => ({
       id: window.crypto.randomUUID(),
       session_id: sessionId,
@@ -93,9 +100,8 @@ export const atlasEngine = {
    * Phase 2: AI Classification of ideas into categories
    */
   async autoClassifyIdeas(sessionId) {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }, { apiVersion: "v1" })
+    const model = getModel("gemini-2.0-flash")
 
-    // 1. Get session context and all ideas
     const { data: session } = await supabase.from('sessions').select('context').eq('id', sessionId).single()
     const { data: ideas } = await supabase.from('ideas').select('id, content').eq('session_id', sessionId)
     
@@ -114,7 +120,6 @@ export const atlasEngine = {
     const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim()
     const { categories } = JSON.parse(jsonStr)
 
-    // 2. Create categories and assign ideas
     for (const cat of categories) {
       const catId = window.crypto.randomUUID()
       await supabase.from('categories').insert({
@@ -137,7 +142,7 @@ export const atlasEngine = {
    * Phase 4: Generate sketch prompt for an idea
    */
   async generateSketch(sessionId, ideaText, groupContext = '') {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }, { apiVersion: "v1" })
+    const model = getModel("gemini-2.0-flash")
 
     const prompt = `
       Genera una descripción visual breve y creativa para ilustrar esta idea: "${ideaText}"
@@ -151,7 +156,6 @@ export const atlasEngine = {
   }
 }
 
-// Utility
 function toBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
