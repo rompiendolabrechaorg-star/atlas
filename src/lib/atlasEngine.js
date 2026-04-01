@@ -2,10 +2,15 @@ import { supabase } from './supabase'
 import { GoogleGenerativeAI } from "@google/generative-ai"
 
 /**
- * Get the API Key from localStorage
+ * Deep cleanup helper (strips hidden chars, spaces, non-ascii)
  */
-export const getGeminiKey = () => localStorage.getItem('atlas_gemini_key')
-export const setGeminiKey = (key) => localStorage.setItem('atlas_gemini_key', key)
+const cleanKey = (k) => {
+  if (!k) return '';
+  return k.trim().replace(/[^A-Za-z0-9\-_]/g, '');
+}
+
+export const getGeminiKey = () => cleanKey(localStorage.getItem('atlas_gemini_key'))
+export const setGeminiKey = (key) => localStorage.setItem('atlas_gemini_key', cleanKey(key))
 
 /**
  * Initialize Gemini dynamically
@@ -30,7 +35,7 @@ const getModel = (modelName = "gemini-1.5-flash") => {
  */
 export const testGeminiConnection = async (tempKey = null) => {
   try {
-    const key = tempKey || getGeminiKey();
+    const key = cleanKey(tempKey || getGeminiKey());
     if (!key) throw new Error("No hay llave para probar");
     
     console.log(`[Atlas] Testing Key: ${key.slice(0,6)}...${key.slice(-4)}`);
