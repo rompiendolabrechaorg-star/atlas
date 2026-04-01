@@ -25,23 +25,23 @@ const getModel = (modelName = "gemini-1.5-flash") => {
   // Debug: Show start and end to verify cache isn't serving an old key
   console.log(`[Atlas] IA Init (v4.1 - STABLE V1). Key: ${key.slice(0,6)}...${key.slice(-4)} (Len: ${key.length})`);
   
-  // Explicitly force v1 for gemini-1.5-flash-latest
+  // Explicitly force v1beta for maximum compatibility
   const genAI = new GoogleGenerativeAI(key);
-  return genAI.getGenerativeModel({ model: modelName }, { apiVersion: "v1" });
+  return genAI.getGenerativeModel({ model: modelName }, { apiVersion: "v1beta" });
 }
 
 /**
- * Diagnostic tool to test connection
+ * Live Connection Test
  */
 export const testGeminiConnection = async (tempKey = null) => {
   try {
     const key = cleanKey(tempKey || getGeminiKey());
     if (!key) throw new Error("No hay llave para probar");
     
-    console.log(`[Atlas] Testing Key: ${key.slice(0,6)}...${key.slice(-4)}`);
+    console.log(`[Atlas] Testing Key: ${key.slice(0,6)}...${key.slice(-4)} (v1beta)`);
     
     const genAI = new GoogleGenerativeAI(key);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" }, { apiVersion: "v1" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1beta" });
     const result = await model.countTokens("Connect test");
     return { ok: true, tokens: result.totalTokens };
   } catch (e) {
