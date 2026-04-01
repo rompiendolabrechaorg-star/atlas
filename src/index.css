@@ -1,0 +1,322 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Caveat:wght@400;500;600&display=swap');
+
+@import "tailwindcss";
+
+:root {
+  --paper: #FAFAF7;
+  --postit: #FFD700;
+  --postit-hover: #FFC200;
+  --postit-shadow: rgba(255, 215, 0, 0.3);
+  --stone: #A8A29E;
+  --stone-light: #E8E5E1;
+  --ink: #1C1917;
+  --ink-muted: #57534E;
+  --accent: #F59E0B;
+  --success: #10B981;
+  --white: #FFFFFF;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== POSTIT CARDS ===== */
+.postit {
+  background: var(--postit);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 2px 4px 12px var(--postit-shadow), 0 1px 2px rgba(0,0,0,0.08);
+  font-family: 'Inter', sans-serif;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: grab;
+}
+
+.postit:hover {
+  transform: translateY(-3px) rotate(0.5deg);
+  box-shadow: 4px 8px 20px var(--postit-shadow), 0 2px 4px rgba(0,0,0,0.12);
+}
+
+.postit:active {
+  cursor: grabbing;
+  transform: scale(1.03) rotate(1deg);
+}
+
+/* ===== PHASE NAV ===== */
+.phase-nav {
+  display: flex;
+  gap: 0;
+  background: var(--white);
+  border-radius: 24px;
+  padding: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.phase-btn {
+  padding: 10px 20px;
+  border-radius: 18px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-muted);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.phase-btn.active {
+  background: var(--postit);
+  color: var(--ink);
+  box-shadow: 0 2px 8px var(--postit-shadow);
+}
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--white);
+  border-radius: 20px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border: 1px solid var(--stone-light);
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+}
+
+/* ===== BUTTONS ===== */
+.btn-primary {
+  background: var(--ink);
+  color: var(--white);
+  padding: 12px 28px;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
+}
+
+.btn-primary:hover {
+  background: #2C2825;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.btn-yellow {
+  background: var(--postit);
+  color: var(--ink);
+  padding: 12px 28px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-yellow:hover {
+  background: var(--postit-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--postit-shadow);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-muted);
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border: 1.5px solid var(--stone-light);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-ghost:hover {
+  border-color: var(--stone);
+  background: var(--stone-light);
+}
+
+/* ===== INPUTS ===== */
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid var(--stone-light);
+  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--white);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input:focus {
+  border-color: var(--postit);
+  box-shadow: 0 0 0 3px var(--postit-shadow);
+}
+
+/* ===== SESSION CODE ===== */
+.session-code {
+  font-family: 'Inter', sans-serif;
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  color: var(--ink);
+  background: var(--postit);
+  padding: 16px 32px;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px var(--postit-shadow);
+}
+
+/* ===== UPLOAD ZONE ===== */
+.upload-zone {
+  border: 2.5px dashed var(--stone-light);
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: transparent;
+}
+
+.upload-zone:hover, .upload-zone.dragover {
+  border-color: var(--postit);
+  background: rgba(255, 215, 0, 0.04);
+}
+
+/* ===== CATEGORY CONTAINER ===== */
+.category-container {
+  background: var(--white);
+  border: 2px dashed var(--stone-light);
+  border-radius: 20px;
+  padding: 20px;
+  min-height: 160px;
+  transition: all 0.2s ease;
+}
+
+.category-container.drag-over {
+  border-color: var(--postit);
+  background: rgba(255, 215, 0, 0.05);
+}
+
+/* ===== MATRIX ===== */
+.matrix-container {
+  background: var(--white);
+  border-radius: 24px;
+  border: 1.5px solid var(--stone-light);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ===== VOTE CARD ===== */
+.vote-card {
+  background: var(--white);
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  transition: all 0.25s ease;
+}
+
+.vote-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2.5px solid var(--stone-light);
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vote-btn:hover {
+  border-color: var(--postit);
+  background: rgba(255, 215, 0, 0.1);
+  transform: scale(1.08);
+}
+
+.vote-btn.voted {
+  background: var(--postit);
+  border-color: var(--postit);
+  transform: scale(1.12);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popIn {
+  0%   { transform: scale(0.85); opacity: 0; }
+  70%  { transform: scale(1.04); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-up {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.animate-pop {
+  animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--stone-light) 25%, #f5f5f0 50%, var(--stone-light) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 10px;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--stone-light); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--stone); }
+
+/* ===== BADGE ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.badge-yellow { background: rgba(255, 215, 0, 0.2); color: #92400E; }
+.badge-gray   { background: var(--stone-light); color: var(--ink-muted); }
+.badge-green  { background: rgba(16, 185, 129, 0.1); color: #065F46; }
+
+/* ===== CONFETTI / WINNER ===== */
+.winner-glow {
+  box-shadow: 0 0 0 3px var(--postit), 0 8px 32px var(--postit-shadow);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 640px) {
+  .session-code { font-size: 2rem; letter-spacing: 0.2em; padding: 12px 24px; }
+  .phase-btn { padding: 8px 12px; font-size: 0.7rem; }
+}

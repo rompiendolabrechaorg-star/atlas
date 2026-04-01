@@ -1,0 +1,246 @@
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { createSession, getSessionByCode } from '../lib/api'
+import { getOrCreateUserToken } from '../lib/supabase'
+
+export default function LandingPage() {
+  const navigate = useNavigate()
+  const [mode, setMode] = useState(null) // 'create' | 'join'
+  const [code, setCode] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const [context, setContext] = useState('')
+  const [createStep, setCreateStep] = useState(1) // 1: Info, 2: Context input
+
+  const handleCreate = async () => {
+    if (createStep === 1) {
+      setCreateStep(2)
+      return
+    }
+    if (!context.trim()) {
+      setError('Por favor, aporta algo de contexto sobre el proyecto.')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+    try {
+      const token = getOrCreateUserToken()
+      const session = await createSession(token, context, 3)
+      localStorage.setItem(`atlas_admin_${session.session_id}`, 'true')
+      navigate(`/admin/${session.session_id}`)
+    } catch (e) {
+      setError('No se pudo crear la sesión. ¿Está el backend corriendo?')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleJoin = async (e) => {
+    e.preventDefault()
+    if (code.length < 4) return
+    setLoading(true)
+    setError('')
+    try {
+      const session = await getSessionByCode(code.trim())
+      navigate(`/vote/${session.id}`)
+    } catch (e) {
+      setError('Código no válido o sesión no encontrada.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'var(--paper)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px',
+    }}>
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: '56px' }} className="animate-fade-up">
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          justifyContent: 'center',
+          marginBottom: '16px',
+        }}>
+          <div style={{
+            width: '48px', height: '48px',
+            background: 'var(--postit)',
+            borderRadius: '12px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '1.5rem',
+            boxShadow: '2px 4px 12px var(--postit-shadow)',
+            transform: 'rotate(-6deg)',
+          }}>💡</div>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--ink)' }}>
+            Atlas de Ideas
+          </h1>
+        </div>
+        <p style={{ color: 'var(--ink-muted)', fontSize: '1rem', lineHeight: 1.6, maxWidth: '380px' }}>
+          Plataforma de ideación colaborativa basada en la metodología{' '}
+          <strong style={{ color: 'var(--ink)' }}>Manual Thinking</strong>
+        </p>
+      </div>
+
+      {/* Main card */}
+      <div className="card animate-fade-up" style={{
+        width: '100%', maxWidth: '440px',
+        padding: '40px 36px',
+        animationDelay: '0.1s',
+      }}>
+        {!mode ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '8px', color: 'var(--ink)' }}>
+              ¿Cómo quieres participar?
+            </h2>
+
+            <button
+              className="btn-yellow"
+              style={{ width: '100%', padding: '18px', fontSize: '1rem', borderRadius: '16px' }}
+              onClick={() => setMode('create')}
+            >
+              🚀 Crear nueva sesión
+            </button>
+
+            <button
+              className="btn-ghost"
+              style={{ width: '100%', padding: '18px', fontSize: '1rem', borderRadius: '16px' }}
+              onClick={() => setMode('join')}
+            >
+              🎯 Unirme con código
+            </button>
+          </div>
+        ) : mode === 'create' ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }} className="animate-pop">
+            <div>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--ink)', marginBottom: '8px' }}>
+                {createStep === 1 ? 'Crear sesión' : 'Contexto del Proyecto'}
+              </h2>
+              <p style={{ color: 'var(--ink-muted)', fontSize: '0.875rem' }}>
+                {createStep === 1 
+                  ? 'Serás el administrador de la sesión y controlarás el flujo entre fases.'
+                  : 'Dame información sobre qué producto o servicio vamos a idear/diseñar (Recuerda aportar los máximos datos posibles):'
+                }
+              </p>
+            </div>
+
+            {createStep === 1 ? (
+              <div style={{
+                background: 'rgba(255,215,0,0.08)',
+                border: '1.5px solid rgba(255,215,0,0.3)',
+                borderRadius: '14px',
+                padding: '16px',
+              }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '1.5rem' }}>📋</span>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Tu sesión incluirá:</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--ink-muted)', marginTop: '4px' }}>
+                      4 subgrupos · Fase 0 (Contexto) · OCR por lotes · Votación · Boceto IA
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <textarea
+                className="input"
+                placeholder="Ej: Vamos a diseñar una nueva app de movilidad urbana sostenible para Madrid, enfocada en micro-alquiler de patinetes eléctricos..."
+                value={context}
+                onChange={e => setContext(e.target.value)}
+                style={{
+                  minHeight: '120px',
+                  padding: '16px',
+                  fontSize: '0.9rem',
+                  lineHeight: '1.5',
+                  borderRadius: '14px',
+                  resize: 'none',
+                }}
+                autoFocus
+              />
+            )}
+
+            {error && (
+              <div style={{ color: '#DC2626', fontSize: '0.875rem', background: '#FEF2F2', padding: '12px', borderRadius: '10px' }}>
+                {error}
+              </div>
+            )}
+
+            <button
+              className="btn-yellow"
+              style={{ width: '100%', padding: '16px', fontSize: '1rem', borderRadius: '14px' }}
+              onClick={handleCreate}
+              disabled={loading}
+            >
+              {loading ? '⏳ Creando...' : createStep === 1 ? 'Continuar →' : '✨ Crear sesión'}
+            </button>
+            <button className="btn-ghost" onClick={() => { 
+                if (createStep === 2) { setCreateStep(1); setError(''); }
+                else { setMode(null); setError(''); }
+              }}>
+              ← Volver
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }} className="animate-pop">
+            <div>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--ink)', marginBottom: '8px' }}>
+                Unirse a sesión
+              </h2>
+              <p style={{ color: 'var(--ink-muted)', fontSize: '0.875rem' }}>
+                Introduce el código de 6 caracteres que te ha facilitado el administrador.
+              </p>
+            </div>
+
+            <input
+              className="input"
+              placeholder="Ej: AB3X9K"
+              value={code}
+              onChange={e => setCode(e.target.value.toUpperCase())}
+              maxLength={8}
+              style={{
+                fontSize: '1.8rem',
+                fontWeight: 800,
+                letterSpacing: '0.3em',
+                textAlign: 'center',
+                padding: '20px',
+                borderRadius: '16px',
+              }}
+              autoFocus
+            />
+
+            {error && (
+              <div style={{ color: '#DC2626', fontSize: '0.875rem', background: '#FEF2F2', padding: '12px', borderRadius: '10px' }}>
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="btn-primary"
+              style={{ width: '100%', padding: '16px', fontSize: '1rem', borderRadius: '14px' }}
+              disabled={loading || code.length < 4}
+            >
+              {loading ? '⏳ Buscando...' : '🎯 Entrar'}
+            </button>
+            <button type="button" className="btn-ghost" onClick={() => { setMode(null); setError(''); setCode('') }}>
+              ← Volver
+            </button>
+          </form>
+        )}
+      </div>
+
+      {/* Footer */}
+      <p style={{ marginTop: '40px', color: 'var(--stone)', fontSize: '0.75rem' }}>
+        Atlas de Ideas · Metodología Manual Thinking
+      </p>
+    </div>
+  )
+}
