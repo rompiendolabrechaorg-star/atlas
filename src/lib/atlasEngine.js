@@ -27,11 +27,13 @@ const getModel = (modelName = "gemini-1.5-flash") => {
   
   // Explicitly force v1beta for maximum compatibility
   const genAI = new GoogleGenerativeAI(key);
-  return genAI.getGenerativeModel({ model: modelName }, { apiVersion: "v1beta" });
+  // Prepend 'models/' if missing for strict API compliance
+  const fullModelName = modelName.startsWith('models/') ? modelName : `models/${modelName}`;
+  return genAI.getGenerativeModel({ model: fullModelName }, { apiVersion: "v1beta" });
 }
 
 /**
- * Live Connection Test
+ * Live Connection Test (v4.7 - Ultra Robust)
  */
 export const testGeminiConnection = async (tempKey = null) => {
   try {
@@ -41,9 +43,10 @@ export const testGeminiConnection = async (tempKey = null) => {
     console.log(`[Atlas] Testing Key: ${key.slice(0,6)}...${key.slice(-4)} (v1beta)`);
     
     const genAI = new GoogleGenerativeAI(key);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1beta" });
-    const result = await model.countTokens("Connect test");
-    return { ok: true, tokens: result.totalTokens };
+    // Use models/ prefix and generateContent for maximum reliability
+    const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" }, { apiVersion: "v1beta" });
+    const result = await model.generateContent("hi");
+    return { ok: true, tokens: 1 }; // Return dummy token count if successful
   } catch (e) {
     console.error("[Atlas] Test Failed:", e);
     return { ok: false, error: e.message };
