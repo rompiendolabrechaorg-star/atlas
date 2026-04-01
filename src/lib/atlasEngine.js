@@ -11,23 +11,34 @@ export const setGeminiKey = (key) => localStorage.setItem('atlas_gemini_key', ke
  * Initialize Gemini dynamically
  */
 const getModel = (modelName = "gemini-1.5-flash") => {
-  const key = getGeminiKey()
+  const key = getGeminiKey();
   if (!key) {
-    console.error("❌ [Atlas] Error: No se encontró API Key en localStorage.")
-    throw new Error("API_KEY_MISSING")
+    console.error("❌ [Atlas] Error: No API Key found.");
+    throw new Error("API_KEY_MISSING");
   }
   
-  console.log(`[Atlas] Inicializando IA (v3.1). Longitud de llave: ${key.length} caracteres.`)
+  // Debug: Show start and end to verify cache isn't serving an old key
+  console.log(`[Atlas] IA Init. Key: ${key.slice(0,6)}...${key.slice(-4)} (Len: ${key.length})`);
   
-  const genAI = new GoogleGenerativeAI(key)
-  // gemini-1.5-flash is stable on v1
-  return genAI.getGenerativeModel({ model: modelName })
+  const genAI = new GoogleGenerativeAI(key);
+  return genAI.getGenerativeModel({ model: modelName });
 }
 
 /**
- * Atlas Engine handles all logic from the client.
+ * Diagnostic tool to test connection
  */
-console.log("🚀 Atlas Engine 3.1 - STABLE FLASH ACTIVE")
+export const testGeminiConnection = async () => {
+  try {
+    const model = getModel();
+    const result = await model.countTokens("Connect test");
+    return { ok: true, tokens: result.totalTokens };
+  } catch (e) {
+    console.error("[Atlas] Test Failed:", e);
+    return { ok: false, error: e.message };
+  }
+}
+
+console.log("🚀 Atlas Engine 4.0 - PRO DIAGNOSTICS ACTIVE");
 
 export const atlasEngine = {
   

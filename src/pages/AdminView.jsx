@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom'
 import { getSession, updatePhase, getGroups } from '../lib/api'
 import { getOrCreateUserToken } from '../lib/supabase'
 import { supabase } from '../lib/supabase'
-import { getGeminiKey, setGeminiKey } from '../lib/atlasEngine'
+import { getGeminiKey, setGeminiKey, testGeminiConnection } from '../lib/atlasEngine'
 import PhaseNav from '../components/PhaseNav'
 import Phase1Capture from '../components/Phase1Capture'
 import Phase2Synthesis from '../components/Phase2Synthesis'
@@ -22,6 +22,19 @@ export default function AdminView() {
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [keySaved, setKeySaved] = useState(false)
   const [hasKey, setHasKey] = useState(!!getGeminiKey())
+  const [testStatus, setTestStatus] = useState(null) // null, 'testing', 'ok', 'error'
+  const [testErr, setTestErr] = useState('')
+
+  const handleTestKey = async () => {
+    setTestStatus('testing')
+    const res = await testGeminiConnection()
+    if (res.ok) {
+      setTestStatus('ok')
+    } else {
+      setTestStatus('error')
+      setTestErr(res.error)
+    }
+  }
 
   const handleSaveKey = (e) => {
     e.preventDefault()
@@ -157,17 +170,37 @@ export default function AdminView() {
                 />
               </div>
 
+              {testStatus === 'ok' && (
+                <div style={{ color: '#059669', fontSize: '0.8rem', background: '#ECFDF5', padding: '8px', borderRadius: '4px', marginBottom: '16px' }}>
+                  ✅ ¡Conexión con Google exitosa!
+                </div>
+              )}
+              {testStatus === 'error' && (
+                <div style={{ color: '#DC2626', fontSize: '0.8rem', background: '#FEF2F2', padding: '8px', borderRadius: '4px', marginBottom: '16px' }}>
+                  ❌ Error: {testErr}
+                </div>
+              )}
+
               {keySaved && (
                 <div style={{ color: '#059669', fontSize: '0.875rem', background: '#ECFDF5', padding: '12px', borderRadius: '10px', marginBottom: '16px', textAlign: 'center' }}>
                   ✅ ¡Llave guardada!
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
                 <button type="submit" className="btn-yellow" style={{ flex: 1, padding: '14px' }} disabled={!apiKeyInput.trim()}>
-                  {hasKey ? 'Actualizar Llave' : 'Guardar Llave'}
+                  {hasKey ? 'Actualizar' : 'Guardar'}
                 </button>
-                <button type="button" className="btn-ghost" onClick={() => setShowSettings(false)} style={{ flex: 1 }}>
+                <button 
+                  type="button" 
+                  className="btn-ghost" 
+                  onClick={handleTestKey} 
+                  disabled={!hasKey && !apiKeyInput.trim()}
+                  style={{ flex: 1, background: 'var(--paper)' }}
+                >
+                  {testStatus === 'testing' ? '⌛ Probando...' : '🔍 Probar'}
+                </button>
+                <button type="button" className="btn-ghost" onClick={() => setShowSettings(false)} style={{ flex: '1 1 100%' }}>
                   Cerrar
                 </button>
               </div>
