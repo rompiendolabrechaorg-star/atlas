@@ -8,6 +8,7 @@ const genAI = new GoogleGenerativeAI("AIzaSyD2F6NrG-Ee4EfeFwR3QGyF-W8X5nNYzWY")
  * Atlas Engine handles all logic that used to be in the backend
  * by calling Supabase and Gemini directly from the client.
  */
+console.log("🚀 Atlas Engine v1.0.2 - API Estable Cargada")
 export const atlasEngine = {
   
   /**
