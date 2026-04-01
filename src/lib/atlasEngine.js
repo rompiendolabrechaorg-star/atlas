@@ -25,7 +25,7 @@ export const atlasEngine = {
       context: context,
       code: code,
       vote_limit: voteLimit,
-      phase: 0
+      phase: 1
     }).select().single()
 
     if (error) throw error
