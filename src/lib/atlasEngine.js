@@ -46,7 +46,7 @@ export const atlasEngine = {
    * Analyze group images using Gemini OCR
    */
   async analyzeImages(sessionId, groupId, files) {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1" })
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }, { apiVersion: "v1" })
 
     const prompt = `
       Analiza estas imágenes de post-its de una sesión de ideación.
@@ -93,7 +93,7 @@ export const atlasEngine = {
    * Phase 2: AI Classification of ideas into categories
    */
   async autoClassifyIdeas(sessionId) {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1" })
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }, { apiVersion: "v1" })
 
     // 1. Get session context and all ideas
     const { data: session } = await supabase.from('sessions').select('context').eq('id', sessionId).single()
@@ -137,7 +137,7 @@ export const atlasEngine = {
    * Phase 4: Generate sketch prompt for an idea
    */
   async generateSketch(sessionId, ideaText, groupContext = '') {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1" })
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }, { apiVersion: "v1" })
 
     const prompt = `
       Genera una descripción visual breve y creativa para ilustrar esta idea: "${ideaText}"
