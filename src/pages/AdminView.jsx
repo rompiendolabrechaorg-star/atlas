@@ -21,19 +21,20 @@ export default function AdminView() {
   const [showSettings, setShowSettings] = useState(false)
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [keySaved, setKeySaved] = useState(false)
-
-  useEffect(() => {
-    const savedKey = getGeminiKey()
-    if (savedKey) {
-      setApiKeyInput(savedKey.substring(0, 8) + '****************')
-    }
-  }, [])
+  const hasKey = !!getGeminiKey()
 
   const handleSaveKey = (e) => {
     e.preventDefault()
-    if (!apiKeyInput.trim()) return
-    setGeminiKey(apiKeyInput.trim())
+    const cleanKey = apiKeyInput.trim()
+    if (!cleanKey) return
+    // Prevent saving masked keys
+    if (cleanKey.includes('*')) {
+      alert("Por favor, introduce la llave real, no los asteriscos.")
+      return
+    }
+    setGeminiKey(cleanKey)
     setKeySaved(true)
+    setApiKeyInput('') // Clear input after save
     setTimeout(() => {
       setKeySaved(false)
       setShowSettings(false)
@@ -121,13 +122,20 @@ export default function AdminView() {
             
             <form onSubmit={handleSaveKey}>
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--stone)', marginBottom: '8px', display: 'block' }}>
-                  Gemini API Key
-                </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--stone)' }}>
+                    Gemini API Key
+                  </label>
+                  {hasKey && (
+                    <span style={{ fontSize: '0.65rem', color: '#059669', background: '#ECFDF5', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
+                      ✅ CONFIGURADA
+                    </span>
+                  )}
+                </div>
                 <input 
                   type="password"
                   className="input"
-                  placeholder="AIzaSy..."
+                  placeholder={hasKey ? "••••••••••••••••" : "Pega tu nueva API Key aquí..."}
                   value={apiKeyInput}
                   onChange={e => setApiKeyInput(e.target.value)}
                   style={{ fontSize: '0.9rem', padding: '14px' }}
@@ -141,11 +149,11 @@ export default function AdminView() {
               )}
 
               <div style={{ display: 'flex', gap: '12px' }}>
-                <button type="submit" className="btn-yellow" style={{ flex: 1, padding: '14px' }}>
-                  Actualizar
+                <button type="submit" className="btn-yellow" style={{ flex: 1, padding: '14px' }} disabled={!apiKeyInput.trim()}>
+                  {hasKey ? 'Actualizar Llave' : 'Guardar Llave'}
                 </button>
                 <button type="button" className="btn-ghost" onClick={() => setShowSettings(false)} style={{ flex: 1 }}>
-                  Cerrar
+                  Cancelar
                 </button>
               </div>
             </form>
