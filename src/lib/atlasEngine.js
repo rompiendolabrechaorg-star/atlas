@@ -12,15 +12,22 @@ export const setGeminiKey = (key) => localStorage.setItem('atlas_gemini_key', ke
  */
 const getModel = (modelName = "gemini-2.0-flash") => {
   const key = getGeminiKey()
-  if (!key) throw new Error("API_KEY_MISSING")
+  if (!key) {
+    console.error("❌ [Atlas] Error: No se encontró API Key en localStorage.")
+    throw new Error("API_KEY_MISSING")
+  }
+  
+  console.log(`[Atlas] Inicializando IA. Longitud de llave: ${key.length} caracteres.`)
+  
   const genAI = new GoogleGenerativeAI(key)
-  return genAI.getGenerativeModel({ model: modelName }, { apiVersion: "v1" })
+  // Switched to v1beta for Gemini 2.0 stability
+  return genAI.getGenerativeModel({ model: modelName }, { apiVersion: "v1beta" })
 }
 
 /**
  * Atlas Engine handles all logic from the client.
  */
-console.log("🚀 Atlas Engine 2.1 - Master Key System Active")
+console.log("🚀 Atlas Engine 3.0 - SECURE & RESET READY")
 
 export const atlasEngine = {
   

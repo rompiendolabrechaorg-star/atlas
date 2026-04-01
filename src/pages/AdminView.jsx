@@ -21,24 +21,39 @@ export default function AdminView() {
   const [showSettings, setShowSettings] = useState(false)
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [keySaved, setKeySaved] = useState(false)
-  const hasKey = !!getGeminiKey()
+  const [hasKey, setHasKey] = useState(!!getGeminiKey())
 
   const handleSaveKey = (e) => {
     e.preventDefault()
     const cleanKey = apiKeyInput.trim()
     if (!cleanKey) return
-    // Prevent saving masked keys
+    
     if (cleanKey.includes('*')) {
-      alert("Por favor, introduce la llave real, no los asteriscos.")
+      alert("❌ Error: Estás pegando asteriscos. Debes pegar la LLAVE REAL de AI Studio.")
       return
     }
+    
     setGeminiKey(cleanKey)
     setKeySaved(true)
-    setApiKeyInput('') // Clear input after save
+    setHasKey(true)
+    setApiKeyInput('')
+    
+    console.log(`[Atlas] Llave guardada. Longitud: ${cleanKey.length}`)
+    alert("✅ LLAVE ACTUALIZADA")
+    
     setTimeout(() => {
       setKeySaved(false)
       setShowSettings(false)
-    }, 1500)
+    }, 1000)
+  }
+
+  const handleDeleteKey = () => {
+    if (window.confirm("¿Seguro que quieres BORRAR la llave guardada?")) {
+      localStorage.removeItem('atlas_gemini_key')
+      setHasKey(false)
+      setApiKeyInput('')
+      alert("🗑️ Llave eliminada.")
+    }
   }
 
   useEffect(() => {
@@ -153,9 +168,23 @@ export default function AdminView() {
                   {hasKey ? 'Actualizar Llave' : 'Guardar Llave'}
                 </button>
                 <button type="button" className="btn-ghost" onClick={() => setShowSettings(false)} style={{ flex: 1 }}>
-                  Cancelar
+                  Cerrar
                 </button>
               </div>
+
+              {hasKey && (
+                <button 
+                  type="button"
+                  onClick={handleDeleteKey}
+                  style={{ 
+                    marginTop: '24px', width: '100%', background: 'none', border: 'none', 
+                    color: '#EF4444', fontSize: '0.75rem', textDecoration: 'underline', 
+                    cursor: 'pointer', fontWeight: 600 
+                  }}
+                >
+                  BORRAR LLAVE GUARDADA
+                </button>
+              )}
             </form>
           </div>
         </div>
