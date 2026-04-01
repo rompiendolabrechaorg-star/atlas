@@ -18,10 +18,11 @@ const getModel = (modelName = "gemini-1.5-flash") => {
   }
   
   // Debug: Show start and end to verify cache isn't serving an old key
-  console.log(`[Atlas] IA Init. Key: ${key.slice(0,6)}...${key.slice(-4)} (Len: ${key.length})`);
+  console.log(`[Atlas] IA Init (v4.1 - STABLE V1). Key: ${key.slice(0,6)}...${key.slice(-4)} (Len: ${key.length})`);
   
+  // Explicitly force v1 for gemini-1.5-flash
   const genAI = new GoogleGenerativeAI(key);
-  return genAI.getGenerativeModel({ model: modelName });
+  return genAI.getGenerativeModel({ model: modelName }, { apiVersion: "v1" });
 }
 
 /**
