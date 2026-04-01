@@ -144,7 +144,7 @@ export default function LandingPage() {
                   <div>
                     <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>Tu sesión incluirá:</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--ink-muted)', marginTop: '4px' }}>
-                      4 subgrupos · Fase 0 (Contexto) · OCR por lotes · Votación · Boceto IA
+                      4 subgrupos · Fase 1 (Captura) · OCR por lotes · Votación · Boceto IA
                     </div>
                   </div>
                 </div>
