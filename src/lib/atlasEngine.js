@@ -10,24 +10,24 @@ export const setGeminiKey = (key) => localStorage.setItem('atlas_gemini_key', ke
 /**
  * Initialize Gemini dynamically
  */
-const getModel = (modelName = "gemini-2.0-flash") => {
+const getModel = (modelName = "gemini-1.5-flash") => {
   const key = getGeminiKey()
   if (!key) {
     console.error("❌ [Atlas] Error: No se encontró API Key en localStorage.")
     throw new Error("API_KEY_MISSING")
   }
   
-  console.log(`[Atlas] Inicializando IA. Longitud de llave: ${key.length} caracteres.`)
+  console.log(`[Atlas] Inicializando IA (v3.1). Longitud de llave: ${key.length} caracteres.`)
   
   const genAI = new GoogleGenerativeAI(key)
-  // Switched to v1beta for Gemini 2.0 stability
-  return genAI.getGenerativeModel({ model: modelName }, { apiVersion: "v1beta" })
+  // gemini-1.5-flash is stable on v1
+  return genAI.getGenerativeModel({ model: modelName })
 }
 
 /**
  * Atlas Engine handles all logic from the client.
  */
-console.log("🚀 Atlas Engine 3.0 - SECURE & RESET READY")
+console.log("🚀 Atlas Engine 3.1 - STABLE FLASH ACTIVE")
 
 export const atlasEngine = {
   
@@ -63,7 +63,7 @@ export const atlasEngine = {
    * Analyze group images using Gemini OCR
    */
   async analyzeImages(sessionId, groupId, files) {
-    const model = getModel("gemini-2.0-flash")
+    const model = getModel("gemini-1.5-flash")
 
     const prompt = `
       Analiza estas imágenes de post-its de una sesión de ideación.
@@ -107,7 +107,7 @@ export const atlasEngine = {
    * Phase 2: AI Classification of ideas into categories
    */
   async autoClassifyIdeas(sessionId) {
-    const model = getModel("gemini-2.0-flash")
+    const model = getModel("gemini-1.5-flash")
 
     const { data: session } = await supabase.from('sessions').select('context').eq('id', sessionId).single()
     const { data: ideas } = await supabase.from('ideas').select('id, content').eq('session_id', sessionId)
