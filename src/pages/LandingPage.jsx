@@ -24,7 +24,7 @@ export default function LandingPage() {
 
   const handleTestKey = async () => {
     setTestStatus('testing')
-    const res = await testGeminiConnection()
+    const res = await testGeminiConnection(apiKeyInput.trim())
     if (res.ok) {
       setTestStatus('ok')
     } else {

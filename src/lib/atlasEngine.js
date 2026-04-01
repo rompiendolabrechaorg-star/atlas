@@ -28,9 +28,15 @@ const getModel = (modelName = "gemini-1.5-flash") => {
 /**
  * Diagnostic tool to test connection
  */
-export const testGeminiConnection = async () => {
+export const testGeminiConnection = async (tempKey = null) => {
   try {
-    const model = getModel();
+    const key = tempKey || getGeminiKey();
+    if (!key) throw new Error("No hay llave para probar");
+    
+    console.log(`[Atlas] Testing Key: ${key.slice(0,6)}...${key.slice(-4)}`);
+    
+    const genAI = new GoogleGenerativeAI(key);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }, { apiVersion: "v1" });
     const result = await model.countTokens("Connect test");
     return { ok: true, tokens: result.totalTokens };
   } catch (e) {
