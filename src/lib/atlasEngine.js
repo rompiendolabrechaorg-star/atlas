@@ -34,9 +34,8 @@ const getModel = (modelName = "gemini-1.5-flash") => {
   
   // Explicitly force v1beta for maximum compatibility
   const genAI = new GoogleGenerativeAI(key);
-  // Prepend 'models/' if missing for strict API compliance
   const fullModelName = modelName.startsWith('models/') ? modelName : `models/${modelName}`;
-  return genAI.getGenerativeModel({ model: fullModelName }, { apiVersion: "v1beta" });
+  return genAI.getGenerativeModel({ model: fullModelName }, { apiVersion: "v1" });
 }
 
 /**
@@ -50,7 +49,7 @@ export const testGeminiConnection = async (tempKey = null) => {
     console.log(`[Atlas] Testing Key: ${key.slice(0,6)}...${key.slice(-4)} (v1beta)`);
     
     const genAI = new GoogleGenerativeAI(key);
-    const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" }, { apiVersion: "v1beta" });
+    const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" }, { apiVersion: "v1" });
     
     // Minimal request to verify key validity
     const result = await model.generateContent("test");
@@ -106,7 +105,7 @@ export const atlasEngine = {
    * Analyze group images using Gemini OCR
    */
   async analyzeImages(sessionId, groupId, files) {
-    const model = getModel("gemini-1.5-flash-latest")
+    const model = getModel("gemini-1.5-flash")
 
     const prompt = `
       Analiza estas imágenes de post-its de una sesión de ideación.
@@ -150,7 +149,7 @@ export const atlasEngine = {
    * Phase 2: AI Classification of ideas into categories
    */
   async autoClassifyIdeas(sessionId) {
-    const model = getModel("gemini-1.5-flash-latest")
+    const model = getModel("gemini-1.5-flash")
 
     const { data: session } = await supabase.from('sessions').select('context').eq('id', sessionId).single()
     const { data: ideas } = await supabase.from('ideas').select('id, content').eq('session_id', sessionId)
