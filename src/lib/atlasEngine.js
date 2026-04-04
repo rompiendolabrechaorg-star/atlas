@@ -9,7 +9,14 @@ const cleanKey = (k) => {
   return k.trim().replace(/[^A-Za-z0-9\-_]/g, '');
 }
 
-export const getGeminiKey = () => cleanKey(localStorage.getItem('atlas_gemini_key'))
+export const getGeminiKey = () => {
+  const localKey = localStorage.getItem('atlas_gemini_key');
+  const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+  
+  // Prioritize local storage (explicitly set by user) then environment (system secret)
+  const key = cleanKey(localKey) || cleanKey(envKey);
+  return key;
+}
 export const setGeminiKey = (key) => localStorage.setItem('atlas_gemini_key', cleanKey(key))
 
 /**
@@ -38,18 +45,28 @@ const getModel = (modelName = "gemini-1.5-flash") => {
 export const testGeminiConnection = async (tempKey = null) => {
   try {
     const key = cleanKey(tempKey || getGeminiKey());
-    if (!key) throw new Error("No hay llave para probar");
+    if (!key) throw new Error("No hay llave configurada (ni en LocalStorage ni en Variables de Entorno)");
     
     console.log(`[Atlas] Testing Key: ${key.slice(0,6)}...${key.slice(-4)} (v1beta)`);
     
     const genAI = new GoogleGenerativeAI(key);
-    // Use models/ prefix and generateContent for maximum reliability
     const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" }, { apiVersion: "v1beta" });
-    const result = await model.generateContent("hi");
-    return { ok: true, tokens: 1 }; // Return dummy token count if successful
+    
+    // Minimal request to verify key validity
+    const result = await model.generateContent("test");
+    const response = await result.response;
+    if (response) {
+      return { ok: true, tokens: 1 };
+    }
+    throw new Error("Respuesta vacía de la API");
   } catch (e) {
     console.error("[Atlas] Test Failed:", e);
-    return { ok: false, error: e.message };
+    // Categorize common errors
+    let userMessage = e.message;
+    if (e.message.includes("API key not valid")) userMessage = "La API Key no es válida o ha sido revocada.";
+    if (e.message.includes("blocked")) userMessage = "La petición fue bloqueada por la API (revisa cuotas o seguridad).";
+    
+    return { ok: false, error: userMessage, rawError: e.message };
   }
 }
 

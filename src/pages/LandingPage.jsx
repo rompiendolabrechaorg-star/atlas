@@ -19,6 +19,7 @@ export default function LandingPage() {
   const [apiKeyInput, setApiKeyInput] = useState('')
   const [keySaved, setKeySaved] = useState(false)
   const [hasKey, setHasKey] = useState(!!getGeminiKey())
+  const [isEnvKey, setIsEnvKey] = useState(!!import.meta.env.VITE_GEMINI_API_KEY && !localStorage.getItem('atlas_gemini_key'))
   const [testStatus, setTestStatus] = useState(null) // null, 'testing', 'ok', 'error'
   const [testErr, setTestErr] = useState('')
 
@@ -46,6 +47,7 @@ export default function LandingPage() {
     setGeminiKey(cleanKey)
     setKeySaved(true)
     setHasKey(true)
+    setIsEnvKey(false) // Local key overrides env key
     setApiKeyInput('')
     
     console.log(`[Atlas] Llave guardada. Longitud: ${cleanKey.length}`)
@@ -170,7 +172,10 @@ export default function LandingPage() {
           <div className="card animate-pop" style={{ maxWidth: '400px', width: '100%', padding: '32px' }}>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '8px' }}>Configuración IA</h3>
             <p style={{ fontSize: '0.875rem', color: 'var(--ink-muted)', marginBottom: '24px' }}>
-              Introduce tu API Key de Gemini. Se guardará de forma segura en tu navegador.
+              {isEnvKey 
+                ? "El sistema está usando una API Key configurada globalmente por el administrador."
+                : "Introduce tu API Key de Gemini. Se guardará de forma segura en tu navegador."
+              }
             </p>
             
             <form onSubmit={handleSaveKey}>
@@ -180,8 +185,15 @@ export default function LandingPage() {
                     Gemini API Key
                   </label>
                   {hasKey && (
-                    <span style={{ fontSize: '0.65rem', color: '#059669', background: '#ECFDF5', padding: '2px 8px', borderRadius: '4px', fontWeight: 600 }}>
-                      ✅ CONFIGURADA
+                    <span style={{ 
+                      fontSize: '0.65rem', 
+                      color: isEnvKey ? '#2563EB' : '#059669', 
+                      background: isEnvKey ? '#EFF6FF' : '#ECFDF5', 
+                      padding: '2px 8px', 
+                      borderRadius: '4px', 
+                      fontWeight: 600 
+                    }}>
+                      {isEnvKey ? '🌐 ENV CONFIG' : '🔒 LOCAL CONFIG'}
                     </span>
                   )}
                 </div>
