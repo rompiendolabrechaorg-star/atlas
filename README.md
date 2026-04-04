@@ -1,16 +1,42 @@
-# React + Vite
+# 💡 Atlas de Ideas
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Plataforma de ideación colaborativa basada en la metodología **Manual Thinking**. Atlas de Ideas digitaliza y potencia tus sesiones de diseño y creatividad mediante Inteligencia Artificial (Google Gemini).
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ Características Principales
+- **Captura con IA**: Convierte fotos de tus post-its en texto digitalizado automáticamente.
+- **Clasificación Inteligente**: La IA organiza tus ideas en categorías lógicas basadas en el contexto del proyecto.
+- **Bocetos Creativos**: Genera descripciones visuales para ilustrar tus ideas más innovadoras.
+- **Votación en Tiempo Real**: Prioriza las mejores ideas con tu equipo de forma rápida y sencilla.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🛠️ Cómo empezar (Sin saber programación)
 
-## Expanding the ESLint configuration
+Si eres un usuario y solo quieres probar el programa, hemos preparado una guía paso a paso para ti:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+👉 **[Leer Guía de Instalación para Usuarios](./GUIA_INSTALACION.md)**
+
+---
+
+## 🚀 Instalación para Desarrolladores
+
+Si eres desarrollador, puedes clonar este repositorio y ejecutarlo localmente:
+
+1. Instala las dependencias:
+   ```bash
+   npm install
+   ```
+2. Configura tus variables de entorno en un archivo `.env` (mira el archivo `.env.example`).
+3. Ejecuta el servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
+
+## 🔒 Configuración de la API de Gemini
+Este proyecto requiere una API Key de Google Gemini. Puedes configurar una clave global mediante la variable de entorno `VITE_GEMINI_API_KEY` o permitir que cada usuario introduzca la suya en el panel de **Ajustes (⚙️)** de la aplicación.
+
+---
+
+Desarrollado con ❤️ por [Rompiendo la Brecha](https://github.com/rompiendolabrechaorg-star).
