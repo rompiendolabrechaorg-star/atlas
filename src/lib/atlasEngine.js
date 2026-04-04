@@ -30,12 +30,12 @@ const getModel = (modelName = "gemini-1.5-flash") => {
   }
   
   // Debug: Show start and end to verify cache isn't serving an old key
-  console.log(`[Atlas] IA Init (v4.1 - STABLE V1). Key: ${key.slice(0,6)}...${key.slice(-4)} (Len: ${key.length})`);
+  console.log(`[Atlas] IA Init (v4.9 - ULTRA COMPAT). Key: ${key.slice(0,6)}...${key.slice(-4)} (Len: ${key.length})`);
   
   // Explicitly force v1beta for maximum compatibility
   const genAI = new GoogleGenerativeAI(key);
   const fullModelName = modelName.startsWith('models/') ? modelName : `models/${modelName}`;
-  return genAI.getGenerativeModel({ model: fullModelName }, { apiVersion: "v1" });
+  return genAI.getGenerativeModel({ model: fullModelName }, { apiVersion: "v1beta" });
 }
 
 /**
@@ -49,7 +49,7 @@ export const testGeminiConnection = async (tempKey = null) => {
     console.log(`[Atlas] Testing Key: ${key.slice(0,6)}...${key.slice(-4)} (v1beta)`);
     
     const genAI = new GoogleGenerativeAI(key);
-    const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" }, { apiVersion: "v1" });
+    const model = genAI.getGenerativeModel({ model: "models/gemini-1.5-flash" }, { apiVersion: "v1beta" });
     
     // Minimal request to verify key validity
     const result = await model.generateContent("test");
@@ -69,7 +69,7 @@ export const testGeminiConnection = async (tempKey = null) => {
   }
 }
 
-console.log("🚀 Atlas Engine 4.0 - PRO DIAGNOSTICS ACTIVE");
+console.log("🚀 Atlas Engine v4.9 - ULTRA COMPAT ACTIVE");
 
 export const atlasEngine = {
   
