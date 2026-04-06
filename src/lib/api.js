@@ -162,7 +162,10 @@ export async function getResults(sessionId) {
 
 export async function updateIdea(ideaId, text, drawingDescription) {
   const updates = {}
-  if (text !== undefined) updates.content = text
+  if (text !== undefined) {
+    updates.content = text
+    updates.text = text // Legacy support
+  }
   if (drawingDescription !== undefined) updates.drawing_description = drawingDescription
   
   const { error } = await supabase.from('ideas').update(updates).eq('id', ideaId)

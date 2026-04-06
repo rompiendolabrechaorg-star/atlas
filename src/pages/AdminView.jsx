@@ -125,7 +125,7 @@ export default function AdminView() {
     </div>
   )
 
-  const votingUrl = `${window.location.origin}/vote/${sessionId}`
+  const votingUrl = `${window.location.origin}/#/vote/${sessionId}`
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--paper)', display: 'flex', flexDirection: 'column', position: 'relative' }}>

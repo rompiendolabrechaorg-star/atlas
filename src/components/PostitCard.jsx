@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { updateIdea } from '../lib/api'
 
 export default function PostitCard({ idea, draggable = false, compact = false, style = {}, canEdit = false }) {
-  const text = idea.text || ''
+  const text = idea.content || idea.text || idea.idea || ''
   const drawing = idea.drawing_description || ''
 
   const [isEditing, setIsEditing] = useState(false)
-  const [editedText, setEditedText] = useState(idea.text || '')
+  const [editedText, setEditedText] = useState(idea.content || idea.text || '')
   const [editedDrawing, setEditedDrawing] = useState(idea.drawing_description || '')
   const [saving, setSaving] = useState(false)
 

@@ -39,33 +39,36 @@ const getModel = (modelName = "gemini-1.5-flash") => {
 }
 
 /**
- * Live Connection Test (v4.7 - Ultra Robust)
+ * Live Connection Test (v5.0 - Ultra Robust)
  */
 export const testGeminiConnection = async (tempKey = null) => {
   try {
-    const key = cleanKey(tempKey || getGeminiKey());
-    if (!key) throw new Error("No hay llave configurada (ni en LocalStorage ni en Variables de Entorno)");
+    const rawKey = tempKey || getGeminiKey();
+    const key = cleanKey(rawKey);
+    if (!key) throw new Error("API_KEY_MISSING");
     
-    console.log(`[Atlas] Testing Key: ${key.slice(0,6)}...${key.slice(-4)} (v1beta)`);
+    console.log(`[Atlas] Validando llave: ${key.slice(0,6)}... (v2.5)`);
     
     const genAI = new GoogleGenerativeAI(key);
-    const model = genAI.getGenerativeModel({ model: "models/gemini-2.5-flash" }, { apiVersion: "v1beta" });
+    const model = genAI.getGenerativeModel({ model: "models/gemini-2.5-flash" });
     
-    // Minimal request to verify key validity
+    // Configurar timeout manual de 20s para el test
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    
     const result = await model.generateContent("test");
+    clearTimeout(timeoutId);
+
     const response = await result.response;
-    if (response) {
-      return { ok: true, tokens: 1 };
-    }
-    throw new Error("Respuesta vacía de la API");
+    if (response) return { ok: true };
+    throw new Error("Respuesta de IA vacía");
   } catch (e) {
-    console.error("[Atlas] Test Failed:", e);
-    // Categorize common errors
-    let userMessage = e.message;
-    if (e.message.includes("API key not valid")) userMessage = "La API Key no es válida o ha sido revocada.";
-    if (e.message.includes("blocked")) userMessage = "La petición fue bloqueada por la API (revisa cuotas o seguridad).";
-    
-    return { ok: false, error: userMessage, rawError: e.message };
+    console.error("[Atlas] Test llave fallido:", e);
+    let msg = e.message;
+    if (msg.includes("API key not valid")) msg = "⚠️ LA LLAVE NO ES VÁLIDA (Google Error 400)";
+    if (msg.includes("API_KEY_MISSING")) msg = "⚠️ NO HAY LLAVE CONFIGURADA";
+    if (msg.name === 'AbortError') msg = "⚠️ TIEMPO DE ESPERA AGOTADO (Network Timeout)";
+    return { ok: false, error: msg };
   }
 }
 
@@ -106,43 +109,79 @@ export const atlasEngine = {
    */
   async analyzeImages(sessionId, groupId, files) {
     const model = getModel("gemini-2.5-flash")
-
     const prompt = `
-      Analiza estas imágenes de post-its de una sesión de ideación.
-      Genera una lista de ideas detectadas de forma clara y concisa. 
-      Devuelve SOLO un JSON con este formato: {"ideas": ["idea1", "idea2", ...]}
+      Eres un experto en facilitación visual y metodología Manual Thinking.
+      Tu tarea es analizar estas imágenes de una sesión de ideación creativa.
+      
+      INSTRUCCIONES:
+      1. Identifica cada post-it o tarjeta individualmente.
+      2. Interpreta el texto manuscrito. Si el texto es difícil de leer, usa el contexto visual para deducir la idea lógica (ej: si hay una bombilla, es una idea creativa).
+      3. Extrae la idea principal de cada tarjeta de forma concisa.
+      4. Si hay dibujos, menciónalos solo si son clave para la idea.
+      5. Devuelve SOLO un objeto JSON con este formato: 
+      {"ideas": ["texto de la idea 1", "texto de la idea 2", ...]}
     `
 
     const imageParts = await Promise.all(
       files.map(async file => {
         const base64 = await toBase64(file)
-        return {
-          inlineData: {
-            data: base64.split(",")[1],
-            mimeType: file.type
-          }
-        }
+        return { inlineData: { data: base64.split(",")[1], mimeType: file.type } }
       })
     )
 
-    const result = await model.generateContent([prompt, ...imageParts])
-    const response = await result.response
-    const text = response.text()
-    
-    const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim()
-    const { ideas } = JSON.parse(jsonStr)
+    console.log(`[Atlas] Iniciando análisis AI para grupo ${groupId}...`);
 
-    const ideaObjects = ideas.map(content => ({
-      id: window.crypto.randomUUID(),
-      session_id: sessionId,
-      group_id: groupId,
-      content: content
-    }))
+    try {
+      // Timeout de 45 segundos para el procesamiento de imágenes
+      const result = await Promise.race([
+        model.generateContent([prompt, ...imageParts]),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("TIMEOUT_REACHED")), 45000))
+      ]);
 
-    const { error } = await supabase.from('ideas').insert(ideaObjects)
-    if (error) throw error
+      const response = await result.response
+      const text = response.text()
+      console.log("[Atlas IA] Respuesta cruda recibida:", text)
 
-    return { ok: true }
+      let ideas = []
+      try {
+        const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim()
+        const parsed = JSON.parse(jsonStr)
+        const rawIdeas = Array.isArray(parsed) ? parsed : (parsed.ideas || [])
+        
+        ideas = rawIdeas.map(item => {
+          if (typeof item === 'string') return item.trim()
+          if (typeof item === 'object' && item !== null) return (item.text || item.content || item.idea || JSON.stringify(item)).trim()
+          return String(item).trim()
+        }).filter(str => str.length > 2)
+
+      } catch (e) {
+        console.warn("[Atlas IA] Error de parseo, usando fallback de líneas.");
+        ideas = text.split('\n').map(l => l.replace(/^[-*•\d.]+\s*/, '').trim()).filter(l => l.length > 5 && !l.includes('{'))
+      }
+
+      if (ideas.length === 0) throw new Error("NO_IDEAS_DETECTED")
+
+      const ideaObjects = ideas.map(content => ({
+        id: window.crypto.randomUUID(),
+        session_id: sessionId,
+        group_id: groupId,
+        content: content,
+        text: content // Legacy support
+      }))
+
+      const { error } = await supabase.from('ideas').insert(ideaObjects)
+      if (error) throw error
+
+      return { ok: true, count: ideas.length }
+    } catch (e) {
+      console.error("[Atlas IA] Error corregido en análisis:", e);
+      let userMsg = e.message;
+      if (e.message === "TIMEOUT_REACHED") userMsg = "⏱️ La IA está tardando demasiado. Prueba con menos fotos o revisa tu conexión.";
+      if (e.message.includes("API key not valid")) userMsg = "⚠️ LLAVE INVÁLIDA (Google Error 400). Por favor, revisa tus Ajustes.";
+      if (e.message === "NO_IDEAS_DETECTED") userMsg = "⚠️ No se detectaron ideas claras. Asegúrate de que los post-its sean legibles.";
+      
+      throw new Error(userMsg);
+    }
   },
 
   /**
@@ -157,11 +196,20 @@ export const atlasEngine = {
     if (!ideas || ideas.length === 0) return { ok: true }
 
     const prompt = `
-      Basado en este contexto de sesión: "${session?.context || 'Ideación general'}"
-      Clasifica estas ideas en un máximo de 5 categorías lógicas.
-      Ideas: ${JSON.stringify(ideas.map(i => ({id: i.id, text: i.content})))}
-      Devuelve SOLO un JSON con este formato: 
-      {"categories": [{"title": "Nombre Cat", "idea_ids": ["uuid1", "uuid2"]}]}
+      Actúa como un estratega experto en síntesis de ideas.
+      Contexto de la sesión: "${session?.context || 'Ideación general'}"
+      
+      TAREA:
+      1. Analiza las siguientes ideas extraídas de una sesión de Manual Thinking.
+      2. Agrúpalas de forma inteligente en un máximo de 5 categorías temáticas.
+      3. Asegúrate de que los nombres de las categorías sean profesionales y evocadores.
+      4. Asigna cada ID de idea a la categoría que mejor le encaje.
+      
+      IDEAS A CLASIFICAR:
+      ${JSON.stringify(ideas.map(i => ({id: i.id, text: i.content})))}
+      
+      IMPORTANTE: Devuelve SOLO un JSON con este formato: 
+      {"categories": [{"title": "Nombre Categoría", "idea_ids": ["uuid1", "uuid2"]}]}
     `
 
     const result = await model.generateContent(prompt)

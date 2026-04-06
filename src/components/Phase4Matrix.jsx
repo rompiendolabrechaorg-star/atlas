@@ -68,7 +68,7 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
     setGenerating(true)
     setSketchError('')
     try {
-      const res = await generateSketch(sessionId, winnerIdea.text || winnerIdea.drawing_description, sessionContext)
+      const res = await generateSketch(sessionId, winnerIdea.content || winnerIdea.drawing_description, sessionContext)
       setSketch(res.sketch_b64)
     } catch (e) {
       setSketchError(`Error: ${e.message}`)
@@ -109,7 +109,7 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
     y += 8
     doc.setFont('helvetica', 'normal')
     ideas.slice(0, 5).forEach((idea, idx) => {
-        doc.text(`${idx + 1}. ${idea.text || idea.drawing_description} (${voteCounts[idea.id] || 0} votos)`, 25, y)
+        doc.text(`${idx + 1}. ${idea.content || idea.text || idea.drawing_description || 'Sin texto'} (${voteCounts[idea.id] || 0} votos)`, 25, y)
         y += 7
     })
     y += 10
@@ -135,7 +135,7 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
         doc.text('Idea Ganadora:', 20, y)
         y += 6
         doc.setFont('helvetica', 'normal')
-        doc.text(winnerIdea.text || winnerIdea.drawing_description, 20, y)
+        doc.text(winnerIdea.content || winnerIdea.drawing_description, 20, y)
         y += 10
         
         const sketchData = `data:image/png;base64,${sketch}`
@@ -242,7 +242,7 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
                           fill="white" stroke="#E8E5E1" strokeWidth="1"
                         />
                         <text x={cx + r + 10} y={cy + 5} fontSize="9" fill="#1C1917" fontFamily="Inter">
-                          {(idea.text || idea.drawing_description || 'Sin texto').substring(0, 28)}
+                          {(idea.content || idea.text || idea.drawing_description || 'Sin texto').substring(0, 28)}
                           {idea.votes ? ` (${idea.votes}v)` : ''}
                         </text>
                       </g>
@@ -269,7 +269,7 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
                   fontWeight: 700, fontSize: '0.7rem', flexShrink: 0,
                 }}>{idx + 1}</span>
                 <span style={{ flex: 1, color: 'var(--ink)' }}>
-                  {(idea.text || idea.drawing_description || 'Sin texto').substring(0, 40)}
+                  {(idea.content || idea.text || idea.drawing_description || 'Sin texto').substring(0, 40)}
                 </span>
                 <span className="badge badge-yellow">{idea.votes || 0}v</span>
                 {winnerIdea?.id === idea.id && <span style={{ fontSize: '0.9rem' }}>⭐</span>}
@@ -286,9 +286,9 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
                 ⭐ IDEA PROMETEDORA
               </div>
               <p style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--ink)', lineHeight: 1.5, marginBottom: '16px' }}>
-                {winnerIdea.text || winnerIdea.drawing_description || 'Sin texto'}
+                {winnerIdea.content || winnerIdea.text || winnerIdea.drawing_description || 'Sin texto'}
               </p>
-              {winnerIdea.drawing_description && winnerIdea.text && (
+              {winnerIdea.drawing_description && winnerIdea.content && (
                 <p style={{ fontSize: '0.8rem', color: 'var(--ink-muted)', fontStyle: 'italic', marginBottom: '16px' }}>
                   ✏️ {winnerIdea.drawing_description}
                 </p>

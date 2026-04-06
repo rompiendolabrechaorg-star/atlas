@@ -121,9 +121,26 @@ function GroupCard({ group, sessionId, ideas, isAdmin }) {
       )}
 
       {error && (
-        <p style={{ fontSize: '0.8rem', color: '#DC2626', background: '#FEF2F2', padding: '8px 12px', borderRadius: '8px' }}>
-          {error}
-        </p>
+        <div style={{ 
+          fontSize: '0.85rem', color: '#B91C1C', background: '#FEF2F2', 
+          padding: '12px', borderRadius: '12px', border: '1.5px solid #FCA5A5',
+          animation: 'shake 0.4s ease-in-out'
+        }}>
+          <div style={{ fontWeight: 800, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>⚠️ ERROR EN CAPTURA</span>
+          </div>
+          <p style={{ margin: 0, lineHeight: 1.4 }}>{error}</p>
+          <button 
+            onClick={() => { setError(''); setUploading(false); }}
+            style={{ 
+              marginTop: '10px', background: 'white', border: '1px solid #FCA5A5', 
+              borderRadius: '6px', padding: '4px 10px', fontSize: '0.7rem', fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            Reintentar / Limpiar
+          </button>
+        </div>
       )}
 
       {/* Ideas grid */}

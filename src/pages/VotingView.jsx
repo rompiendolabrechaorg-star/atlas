@@ -24,9 +24,9 @@ function IdeaVoteCard({ idea, voted, votesLeft, voteCount, onVote, onUnvote }) {
       border: voted ? '2px solid var(--postit)' : '2px solid transparent',
     }}>
       {/* Idea text */}
-      {idea.text && (
+      {(idea.content || idea.text) && (
         <p style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--ink)', lineHeight: 1.6, marginBottom: idea.drawing_description ? '8px' : '20px' }}>
-          {idea.text}
+          {idea.content || idea.text}
         </p>
       )}
       {idea.drawing_description && (
