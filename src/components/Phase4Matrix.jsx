@@ -138,7 +138,27 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
         doc.text(winnerIdea.content || winnerIdea.drawing_description, 20, y)
         y += 10
         
-        const sketchData = `data:image/png;base64,${sketch}`
+        const fetchImage = async (url) => {
+          const res = await fetch(url)
+          const blob = await res.blob()
+          return new Promise((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => resolve(reader.result)
+            reader.readAsDataURL(blob)
+          })
+        }
+
+        let sketchData = sketch
+        if (sketch.startsWith('http')) {
+          try {
+            sketchData = await fetchImage(sketch)
+          } catch (e) {
+            console.error("Error fetching sketch for PDF:", e)
+          }
+        } else if (!sketch.startsWith('data:')) {
+          sketchData = `data:image/png;base64,${sketch}`
+        }
+        
         doc.addImage(sketchData, 'PNG', 40, y, 120, 120)
     }
 
@@ -312,6 +332,9 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
           {/* Generated sketch */}
           {sketch && (
             <div className="card animate-pop" style={{ padding: '20px' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.06em', marginBottom: '12px' }}>
+                🎨 BOCETO GENERADO CON IA (v6.0 High Fidelity)
+              </div>
               <div 
                 style={{ 
                   width: '100%', 
@@ -337,10 +360,14 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
                 className="btn-ghost"
                 style={{ width: '100%', marginTop: '12px', fontSize: '0.8rem' }}
                 onClick={() => {
-                  const a = document.createElement('a')
-                  a.href = `data:image/png;base64,${sketch}`
-                  a.download = 'boceto-idea-ganadora.png'
-                  a.click()
+                  if (sketch.startsWith('http')) {
+                    window.open(sketch, '_blank')
+                  } else {
+                    const a = document.createElement('a')
+                    a.href = sketch.startsWith('data:') ? sketch : `data:image/png;base64,${sketch}`
+                    a.download = 'boceto-idea-ganadora.png'
+                    a.click()
+                  }
                 }}
               >
                 ⬇️ Descargar boceto
