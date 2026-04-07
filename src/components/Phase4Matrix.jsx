@@ -360,14 +360,10 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
                 className="btn-ghost"
                 style={{ width: '100%', marginTop: '12px', fontSize: '0.8rem' }}
                 onClick={() => {
-                  if (sketch.startsWith('http')) {
-                    window.open(sketch, '_blank')
-                  } else {
-                    const a = document.createElement('a')
-                    a.href = sketch.startsWith('data:') ? sketch : `data:image/png;base64,${sketch}`
-                    a.download = 'boceto-idea-ganadora.png'
-                    a.click()
-                  }
+                  if (!sketch) return
+                  const finalUrl = sketch.startsWith('http') ? sketch : 
+                                  (sketch.startsWith('data:') ? sketch : `data:image/png;base64,${sketch}`)
+                  window.open(finalUrl, '_blank')
                 }}
               >
                 ⬇️ Descargar boceto

@@ -265,12 +265,19 @@ export const atlasEngine = {
 
     try {
       const result = await model.generateContent(promptForAI)
-      const imagePrompt = (await result.response).text().trim()
+      const rawText = (await result.response).text().trim()
       
-      // We use Pollinations.ai for a real JPG-style image generation
+      // Clean possible "Sure, here's the prompt..." or quotes
+      const cleanedPrompt = rawText
+        .replace(/^(Sure|Here|Alright|Prompt|Output|Visual).*?:\s*/i, '')
+        .replace(/[\"\']/g, '')
+        .trim()
+      
+      if (!cleanedPrompt) throw new Error("La IA no pudo generar una descripción visual válida.")
+      
+      // We use the direct image endpoint which is more reliable
       const seed = Math.floor(Math.random() * 1000000)
-      const encodedPrompt = encodeURIComponent(imagePrompt)
-      const imageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=800&height=600&seed=${seed}&model=flux&nologo=true`
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanedPrompt)}?width=800&height=600&seed=${seed}&model=flux&nologo=true`
 
       // Guardamos la URL en el campo sketch_b64 (mismo nombre para evitar cambios en DB)
       const { error } = await supabase
