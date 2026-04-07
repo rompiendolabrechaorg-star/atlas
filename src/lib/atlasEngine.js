@@ -253,15 +253,20 @@ export const atlasEngine = {
 
     // First, we ask Gemini to create a professional image generation prompt in English for better results
     const promptForAI = `
-      Based on this creative idea in Spanish: "${ideaText}"
-      And this context: "${groupContext}"
+      Actúa como 'Nano Banana', un ilustrador minimalista experto en ideación visual.
       
-      Generate a professional, highly detailed image generation prompt in ENGLISH.
-      Style: Professional prototype, clean design, 3D render or high-quality illustration.
-      Theme: Corporate innovation, product design, or clear conceptual visualization.
-      Constraints: No text inside the image. Vibrant colors.
+      Idea Ganadora: "${ideaText}"
+      Contexto del Proyecto (Fase 0): "${groupContext}"
       
-      Return ONLY the English prompt string. Nothing else.`
+      TAREA: Crea un prompt detallado para un generador de imágenes (IA).
+      EL PROMPT DEBE SER EN INGLÉS Y SEGUIR ESTE ESTILO:
+      1. Estilo Visual: Minimalist design doodle or professional blueprint on a clean white paper background.
+      2. Trazado: Thick black ink strokes (Hand-drawn ink style). High contrast.
+      3. Color de Acento: Utiliza ÚNICAMENTE un color amarillo vibrante o naranja para resaltar el componente clave o innovador de la idea. Todo lo demás es blanco y negro.
+      4. Composición: Escena centrada, icónica, estilo 'Manual Thinking', sin texto dentro de la imagen.
+      5. Fidelidad: El dibujo debe reflejar estrictamente el producto o servicio descrito en el contexto del proyecto de la Fase 0.
+      
+      Devuelve SOLO el texto del prompt en inglés. Nada más.`
 
     try {
       const result = await model.generateContent(promptForAI)
