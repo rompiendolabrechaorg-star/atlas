@@ -179,6 +179,10 @@ export default function Phase1Capture({ sessionId, groups, isAdmin }) {
         event: 'UPDATE', schema: 'public', table: 'ideas',
         filter: `session_id=eq.${sessionId}`,
       }, payload => setIdeas(prev => prev.map(i => i.id === payload.new.id ? payload.new : i)))
+      .on('postgres_changes', {
+        event: 'DELETE', schema: 'public', table: 'ideas',
+        filter: `session_id=eq.${sessionId}`,
+      }, payload => setIdeas(prev => prev.filter(i => i.id !== payload.old.id)))
       .subscribe()
 
     return () => supabase.removeChannel(sub)

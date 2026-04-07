@@ -173,6 +173,17 @@ export async function updateIdea(ideaId, text, drawingDescription) {
   return { ok: true }
 }
 
+export async function deleteIdea(ideaId) {
+  // Delete votes and category assignments first to avoid constraint errors
+  await Promise.all([
+    supabase.from('votes').delete().eq('idea_id', ideaId),
+    supabase.from('idea_categories').delete().eq('idea_id', ideaId)
+  ])
+  const { error } = await supabase.from('ideas').delete().eq('id', ideaId)
+  if (error) throw error
+  return { ok: true }
+}
+
 export async function autoClassifyIdeas(sessionId) {
   return atlasEngine.atlasEngine?.autoClassifyIdeas(sessionId) || atlasEngine.autoClassifyIdeas(sessionId)
 }

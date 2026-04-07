@@ -129,7 +129,7 @@ export default function LandingPage() {
         position: 'fixed', bottom: 10, right: 10, fontSize: '10px', color: 'var(--ink-muted)', opacity: 0.5, zIndex: 1000,
         background: 'white', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--stone-light)'
       }}>
-        ATLAS v6.1 - 2026 STABLE AI
+        ATLAS v6.2 - 2026 STABLE AI
       </div>
 
       {/* Settings Button */}

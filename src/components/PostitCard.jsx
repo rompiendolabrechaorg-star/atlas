@@ -1,27 +1,45 @@
 import { useState } from 'react'
-import { updateIdea } from '../lib/api'
+import { updateIdea, deleteIdea } from '../lib/api'
 
 export default function PostitCard({ idea, draggable = false, compact = false, style = {}, canEdit = false }) {
   const text = idea.content || idea.text || idea.idea || ''
   const drawing = idea.drawing_description || ''
 
   const [isEditing, setIsEditing] = useState(false)
-  const [editedText, setEditedText] = useState(idea.content || idea.text || '')
-  const [editedDrawing, setEditedDrawing] = useState(idea.drawing_description || '')
+  const [editedText, setEditedText] = useState(text)
+  const [editedDrawing, setEditedDrawing] = useState(drawing)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const handleSave = async (e) => {
     e.stopPropagation()
+    if (!editedText.trim()) return
     setSaving(true)
     try {
       await updateIdea(idea.id, editedText, editedDrawing)
       setIsEditing(false)
     } catch (err) {
       console.error(err)
+      alert("Error al guardar cambios")
     } finally {
       setSaving(false)
     }
   }
+
+  const handleDelete = async (e) => {
+    e.stopPropagation()
+    if (!window.confirm("¿Estás seguro de eliminar esta idea?")) return
+    setDeleting(true)
+    try {
+      await deleteIdea(idea.id)
+    } catch (err) {
+      console.error(err)
+      alert("Error al eliminar idea")
+      setDeleting(false)
+    }
+  }
+
+  if (deleting) return null
 
   return (
     <div
@@ -55,7 +73,10 @@ export default function PostitCard({ idea, draggable = false, compact = false, s
             <button className="btn-primary" style={{ flex: 1, padding: '4px', fontSize: '0.7rem' }} onClick={handleSave} disabled={saving}>
               {saving ? '...' : '💾'}
             </button>
-            <button className="btn-ghost" style={{ flex: 1, padding: '4px', fontSize: '0.7rem' }} onClick={() => setIsEditing(false)}>
+            <button className="btn-ghost" style={{ flex: 0.5, padding: '4px', fontSize: '1rem', border: '1px solid #fee2e2', color: '#ef4444' }} onClick={handleDelete}>
+              🗑️
+            </button>
+            <button className="btn-ghost" style={{ flex: 0.5, padding: '4px', fontSize: '0.7rem' }} onClick={() => setIsEditing(false)}>
               ✖
             </button>
           </div>
@@ -87,20 +108,25 @@ export default function PostitCard({ idea, draggable = false, compact = false, s
             </p>
           )}
           {canEdit && !compact && (
-            <button
-               className="opacity-0 group-hover:opacity-100 transition-opacity"
-               style={{
-                 position: 'absolute', top: '4px', right: '4px',
-                 background: 'white', borderRadius: '50%', width: '24px', height: '24px',
-                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)', cursor: 'pointer',
-                 fontSize: '0.7rem',
-                 border: 'none',
-               }}
-               onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-            >
-              ✏️
-            </button>
+             <button
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{
+                  position: 'absolute', top: '4px', right: '4px',
+                  background: 'white', borderRadius: '50%', width: '28px', height: '28px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)', cursor: 'pointer',
+                  fontSize: '0.8rem',
+                  border: '1px solid #eee',
+                  zIndex: 5,
+                }}
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  setEditedText(text); // Reset state to latest when opening
+                  setIsEditing(true); 
+                }}
+             >
+                ✏️
+             </button>
           )}
         </>
       )}
