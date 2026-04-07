@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { updateIdea, deleteIdea } from '../lib/api'
 
-export default function PostitCard({ idea, draggable = false, compact = false, style = {}, canEdit = false }) {
+export default function PostitCard({ idea, draggable = false, compact = false, style = {}, canEdit = false, onRefresh }) {
   const text = idea.content || idea.text || idea.idea || ''
   const drawing = idea.drawing_description || ''
 
@@ -17,6 +17,7 @@ export default function PostitCard({ idea, draggable = false, compact = false, s
     setSaving(true)
     try {
       await updateIdea(idea.id, editedText, editedDrawing)
+      if (onRefresh) await onRefresh()
       setIsEditing(false)
     } catch (err) {
       console.error(err)

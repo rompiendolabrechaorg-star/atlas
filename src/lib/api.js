@@ -164,13 +164,21 @@ export async function updateIdea(ideaId, text, drawingDescription) {
   const updates = {}
   if (text !== undefined) {
     updates.content = text
-    updates.text = text // Legacy support
+    updates.text = text
+    updates.idea = text // Some versions might use 'idea'
   }
   if (drawingDescription !== undefined) updates.drawing_description = drawingDescription
   
-  const { error } = await supabase.from('ideas').update(updates).eq('id', ideaId)
-  if (error) throw error
-  return { ok: true }
+  // Use .select() to confirm update success
+  const { data, error } = await supabase.from('ideas').update(updates).eq('id', ideaId).select()
+  if (error) {
+    console.error("Supabase Save Error:", error)
+    throw error
+  }
+  if (!data || data.length === 0) {
+    throw new Error("No se pudo encontrar la idea para actualizar. Verifique que el ID sea correcto.")
+  }
+  return { ok: true, data: data[0] }
 }
 
 export async function deleteIdea(ideaId) {

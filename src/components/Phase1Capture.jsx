@@ -148,7 +148,13 @@ function GroupCard({ group, sessionId, ideas, isAdmin }) {
       {groupIdeas.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px' }}>
           {groupIdeas.map((idea, i) => (
-            <PostitCard key={idea.id} idea={idea} canEdit={isAdmin} style={{ animationDelay: `${i * 0.05}s` }} />
+            <PostitCard 
+              key={idea.id} 
+              idea={idea} 
+              canEdit={isAdmin} 
+              onRefresh={group.onRefresh}
+              style={{ animationDelay: `${i * 0.05}s` }} 
+            />
           ))}
         </div>
       )}
