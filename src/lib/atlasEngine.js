@@ -20,7 +20,7 @@ export const setGeminiKey = (key) => localStorage.setItem('atlas_gemini_key', cl
 /**
  * Centralized Model configuration
  */
-export const GEMINI_MODEL = "gemini-1.5-flash";
+export const GEMINI_MODEL = "gemini-2.5-flash";
 
 /**
  * Initialize Gemini dynamically
@@ -33,7 +33,7 @@ const getModel = (modelName = GEMINI_MODEL) => {
   }
   
   // Debug: Show start and end to verify cache isn't serving an old key
-  console.log(`[Atlas] IA Init (v5.7 - STABLE). Key: ${key.slice(0,6)}...${key.slice(-4)} (Len: ${key.length})`);
+  console.log(`[Atlas] IA Init (v5.8 - 2026 STABLE). Key: ${key.slice(0,6)}...${key.slice(-4)} (Len: ${key.length})`);
   
   // Use default API version (v1) for stable models
   const genAI = new GoogleGenerativeAI(key);
@@ -75,7 +75,7 @@ export const testGeminiConnection = async (tempKey = null) => {
   }
 }
 
-console.log("🚀 Atlas Engine v5.7 - STABLE ACTIVE");
+console.log("🚀 Atlas Engine v5.8 - 2026 STABLE ACTIVE");
 
 export const atlasEngine = {
   
