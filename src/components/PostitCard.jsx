@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { updateIdea, deleteIdea } from '../lib/api'
 
 export default function PostitCard({ idea, draggable = false, compact = false, style = {}, canEdit = false, onRefresh }) {
@@ -6,18 +6,28 @@ export default function PostitCard({ idea, draggable = false, compact = false, s
   const drawing = idea.drawing_description || ''
 
   const [isEditing, setIsEditing] = useState(false)
+  const [localText, setLocalText] = useState(text)
   const [editedText, setEditedText] = useState(text)
   const [editedDrawing, setEditedDrawing] = useState(drawing)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
+  // Keep localText in sync with props, unless we are editing or just saved
+  useEffect(() => {
+    if (!isEditing) {
+      setLocalText(text)
+      setEditedText(text)
+    }
+  }, [text, isEditing])
 
   const handleSave = async (e) => {
     e.stopPropagation()
     if (!editedText.trim()) return
     setSaving(true)
     try {
-      await updateIdea(idea.id, editedText, editedDrawing)
-      if (onRefresh) await onRefresh()
+      const res = await updateIdea(idea.id, editedText, editedDrawing)
+      setLocalText(editedText) // Update local view immediately
+      if (onRefresh) onRefresh() 
       setIsEditing(false)
     } catch (err) {
       console.error(err)
@@ -84,7 +94,7 @@ export default function PostitCard({ idea, draggable = false, compact = false, s
         </div>
       ) : (
         <>
-          {text && (
+          {localText && (
             <p style={{
               fontSize: compact ? '0.75rem' : '0.875rem',
               fontWeight: 500,
@@ -93,7 +103,7 @@ export default function PostitCard({ idea, draggable = false, compact = false, s
               margin: 0,
               wordBreak: 'break-word',
             }}>
-              {text}
+              {localText}
             </p>
           )}
           {drawing && (
@@ -122,7 +132,7 @@ export default function PostitCard({ idea, draggable = false, compact = false, s
                 }}
                 onClick={(e) => { 
                   e.stopPropagation(); 
-                  setEditedText(text); // Reset state to latest when opening
+                  setEditedText(localText); // Reset state to latest local when opening
                   setIsEditing(true); 
                 }}
              >
