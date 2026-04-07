@@ -56,7 +56,7 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
     const pos = positionIdeas(topIdeas, v)
     setPositioned(pos)
     if (pos.length > 0) setWinnerIdea(pos.reduce((best, cur) => cur.x + cur.y > best.x + best.y ? cur : best))
-    if (r?.sketch_b64) setSketch(r.sketch_b64)
+    if (r?.sketch_b64) setSketch(r.sketch_b64) // Column name remains sketch_b64 but content is SVG
     if (s?.context) setSessionContext(s.context)
     setLoading(false)
   }
@@ -69,7 +69,7 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
     setSketchError('')
     try {
       const res = await generateSketch(sessionId, winnerIdea.content || winnerIdea.drawing_description, sessionContext)
-      setSketch(res.sketch_b64)
+      setSketch(res.sketch_svg)
     } catch (e) {
       setSketchError(`Error: ${e.message}`)
     } finally {
@@ -315,10 +315,17 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.06em', marginBottom: '12px' }}>
                 🎨 BOCETO GENERADO CON IA
               </div>
-              <img
-                src={`data:image/png;base64,${sketch}`}
-                alt="Boceto de la idea ganadora"
-                style={{ width: '100%', borderRadius: '12px', boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}
+              <div 
+                style={{ 
+                  width: '100%', 
+                  background: 'white', 
+                  borderRadius: '12px', 
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.05)',
+                  padding: '12px',
+                  display: 'flex',
+                  justifyContent: 'center'
+                }}
+                dangerouslySetInnerHTML={{ __html: sketch }}
               />
               <button
                 className="btn-ghost"

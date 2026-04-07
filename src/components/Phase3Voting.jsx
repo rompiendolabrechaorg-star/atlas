@@ -14,7 +14,7 @@ export default function Phase3Voting({ sessionId, session, isAdmin }) {
   const [voteLimit, setVoteLimit] = useState(session?.vote_limit || 3)
   const [loading, setLoading] = useState(true)
 
-  const votingUrl = `${window.location.origin}/vote/${sessionId}`
+  const votingUrl = `${window.location.origin}/#/vote/${sessionId}`
 
   const loadData = async () => {
     const [i, v] = await Promise.all([getIdeas(sessionId), getVoteCounts(sessionId)])

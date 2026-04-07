@@ -116,14 +116,15 @@ export const atlasEngine = {
       Eres un experto en facilitación visual y metodología Manual Thinking.
       Tu tarea es analizar estas imágenes de una sesión de ideación creativa.
       
-      INSTRUCCIONES:
-      1. Identifica cada post-it o tarjeta individualmente.
-      2. Interpreta el texto manuscrito. Si el texto es difícil de leer, usa el contexto visual para deducir la idea lógica (ej: si hay una bombilla, es una idea creativa).
-      3. Extrae la idea principal de cada tarjeta de forma concisa.
-      4. Si hay dibujos, menciónalos solo si son clave para la idea.
-      5. Devuelve SOLO un objeto JSON con este formato: 
-      {"ideas": ["texto de la idea 1", "texto de la idea 2", ...]}
-    `
+      INSTRUCCIONES CRÍTICAS:
+      1. Idioma: TODO EL CONTENIDO DEBE ESTAR EN ESPAÑOL. No traduzcas al inglés bajo ninguna circunstancia.
+      2. Identifica cada post-it o tarjeta individualmente e interpreta el texto manuscrito.
+      3. Extrae la idea principal de cada tarjeta de forma concisa (máximo 60 caracteres).
+      4. Si hay dibujos, interprétalos para complementar la idea.
+      5. Devuelve ÚNICAMENTE un objeto JSON con este formato: 
+      {"ideas": ["texto idea 1", "texto idea 2", ...]}
+      6. No añadas textos explicativos ni markdown fuera del bloque JSON.`
+
 
     const imageParts = await Promise.all(
       files.map(async file => {
@@ -205,20 +206,25 @@ export const atlasEngine = {
       TAREA:
       1. Analiza las siguientes ideas extraídas de una sesión de Manual Thinking.
       2. Agrúpalas de forma inteligente en un máximo de 5 categorías temáticas.
-      3. Asegúrate de que los nombres de las categorías sean profesionales y evocadores.
+      3. Los nombres de las categorías deben ser profesionales y evocadores.
       4. Asigna cada ID de idea a la categoría que mejor le encaje.
+      5. TODO EL CONTENIDO (TÍTULOS) DEBE ESTAR EN ESPAÑOL.
       
       IDEAS A CLASIFICAR:
       ${JSON.stringify(ideas.map(i => ({id: i.id, text: i.content})))}
       
-      IMPORTANTE: Devuelve SOLO un JSON con este formato: 
+      IMPORTANTE: Devuelve ÚNICAMENTE un JSON con este formato: 
       {"categories": [{"title": "Nombre Categoría", "idea_ids": ["uuid1", "uuid2"]}]}
-    `
+      No añadas explicaciones ni bloques de texto fuera del JSON.`
+
 
     const result = await model.generateContent(prompt)
     const text = (await result.response).text()
-    const jsonStr = text.replace(/```json/g, "").replace(/```/g, "").trim()
-    const { categories } = JSON.parse(jsonStr)
+    
+    // Extractor de JSON robusto
+    const jsonMatch = text.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) throw new Error("La IA no devolvió un formato JSON válido.")
+    const { categories } = JSON.parse(jsonMatch[0])
 
     for (const cat of categories) {
       const catId = window.crypto.randomUUID()
@@ -244,16 +250,39 @@ export const atlasEngine = {
   async generateSketch(sessionId, ideaText, groupContext = '') {
     const model = getModel(GEMINI_MODEL)
 
-    const prompt = `
-      Genera una descripción visual breve y creativa para ilustrar esta idea: "${ideaText}"
-      Contexto opcional: "${groupContext}"
-      El objetivo es que sea una guía para hacer un dibujo sencillo tipo boceto.
-      Respuesta corta (máximo 2 frases).
-    `
+    const prompt = `Actúa como 'Nano Banana', un ilustrador minimalista experto en prototipado rápido.
+      Idea a ilustrar: "${ideaText}"
+      Contexto: "${groupContext}"
 
-    const result = await model.generateContent(prompt)
-    const response = await result.response
-    return { sketch_prompt: response.text() }
+      TAREA: Genera un dibujo conceptual de esta idea usando únicamente código SVG.
+      REGLAS DE DISEÑO:
+      1. Estilo: Minimalista, "blueprint" o "doodle" profesional.
+      2. Colores: Trazo negro (#1C1917) y detalles en amarillo vibrante (#FFD700). Fondo transparente.
+      3. Formato: Un elemento <svg> con viewBox="0 0 400 400".
+      4. Usa formas básicas (<path>, <circle>, <rect>, <line>) para representar la idea de forma icónica.
+      5. Responde EXCLUSIVAMENTE con el código <svg> puro. No incluyas markdown (sin \`\`\`svg).`
+
+    try {
+      const result = await model.generateContent(prompt)
+      const response = await result.response
+      const text = response.text()
+      
+      const svgMatch = text.match(/<svg[\s\S]*<\/svg>/)
+      const svgCode = svgMatch ? svgMatch[0] : null
+      
+      if (!svgCode) throw new Error("No se pudo generar el trazado visual.")
+
+      // Guardamos el SVG como resultado
+      const { error } = await supabase
+        .from('results')
+        .upsert({ session_id: sessionId, sketch_b64: svgCode })
+
+      if (error) throw error
+      return { sketch_svg: svgCode }
+    } catch (e) {
+      console.error('Error in generateSketch:', e)
+      throw e
+    }
   }
 }
 

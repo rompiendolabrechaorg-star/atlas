@@ -27,6 +27,7 @@ function GroupCard({ group, sessionId, ideas, isAdmin }) {
     
     try {
       await analyzeImages(sessionId, group.id, fileArray)
+      if (typeof group.onRefresh === 'function') await group.onRefresh()
     } catch (e) {
       setError(`Error: ${e.message}`)
     } finally {
@@ -183,6 +184,15 @@ export default function Phase1Capture({ sessionId, groups, isAdmin }) {
     return () => supabase.removeChannel(sub)
   }, [sessionId])
 
+  const load = async () => {
+    try {
+      const data = await getIdeas(sessionId)
+      setIdeas(data)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   const totalIdeas = ideas.length
 
   return (
@@ -224,6 +234,7 @@ export default function Phase1Capture({ sessionId, groups, isAdmin }) {
             sessionId={sessionId}
             ideas={ideas}
             isAdmin={isAdmin}
+            onRefresh={load}
           />
         ))}
       </div>
