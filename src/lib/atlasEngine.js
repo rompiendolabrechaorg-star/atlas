@@ -33,12 +33,12 @@ const getModel = (modelName = GEMINI_MODEL) => {
   }
   
   // Debug: Show start and end to verify cache isn't serving an old key
-  console.log(`[Atlas] IA Init (v5.6 - STABLE). Key: ${key.slice(0,6)}...${key.slice(-4)} (Len: ${key.length})`);
+  console.log(`[Atlas] IA Init (v5.7 - STABLE). Key: ${key.slice(0,6)}...${key.slice(-4)} (Len: ${key.length})`);
   
-  // Explicitly force v1beta for maximum compatibility
+  // Use default API version (v1) for stable models
   const genAI = new GoogleGenerativeAI(key);
   const fullModelName = modelName.startsWith('models/') ? modelName : `models/${modelName}`;
-  return genAI.getGenerativeModel({ model: fullModelName }, { apiVersion: "v1beta" });
+  return genAI.getGenerativeModel({ model: fullModelName });
 }
 
 /**
@@ -75,7 +75,7 @@ export const testGeminiConnection = async (tempKey = null) => {
   }
 }
 
-console.log("🚀 Atlas Engine v5.6 - STABLE ACTIVE");
+console.log("🚀 Atlas Engine v5.7 - STABLE ACTIVE");
 
 export const atlasEngine = {
   
