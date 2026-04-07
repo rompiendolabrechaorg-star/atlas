@@ -165,11 +165,11 @@ export async function updateIdea(ideaId, text, drawingDescription) {
   if (text !== undefined) {
     updates.content = text
     updates.text = text
-    updates.idea = text // Some versions might use 'idea'
   }
-  if (drawingDescription !== undefined) updates.drawing_description = drawingDescription
+  // drawing_description might not exist in all DB schemas, but it's used in Phase 4.
+  // We include it only if it's provided and not null.
+  if (drawingDescription) updates.drawing_description = drawingDescription
   
-  // Use .select() to confirm update success
   const { data, error } = await supabase.from('ideas').update(updates).eq('id', ideaId).select()
   if (error) {
     console.error("Supabase Save Error:", error)
