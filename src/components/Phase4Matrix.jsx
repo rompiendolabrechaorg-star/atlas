@@ -56,7 +56,7 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
     const pos = positionIdeas(topIdeas, v)
     setPositioned(pos)
     if (pos.length > 0) setWinnerIdea(pos.reduce((best, cur) => cur.x + cur.y > best.x + best.y ? cur : best))
-    if (r?.sketch_b64) setSketch(r.sketch_b64) // Column name remains sketch_b64 but content is SVG
+    if (r?.sketch_b64) setSketch(r.sketch_b64) // Contains the Pollinations URL
     if (s?.context) setSessionContext(s.context)
     setLoading(false)
   }
@@ -69,7 +69,7 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
     setSketchError('')
     try {
       const res = await generateSketch(sessionId, winnerIdea.content || winnerIdea.drawing_description, sessionContext)
-      setSketch(res.sketch_svg)
+      setSketch(res.sketch_url)
     } catch (e) {
       setSketchError(`Error: ${e.message}`)
     } finally {
@@ -312,21 +312,27 @@ export default function Phase4Matrix({ sessionId, isAdmin }) {
           {/* Generated sketch */}
           {sketch && (
             <div className="card animate-pop" style={{ padding: '20px' }}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.06em', marginBottom: '12px' }}>
-                🎨 BOCETO GENERADO CON IA
-              </div>
               <div 
                 style={{ 
                   width: '100%', 
                   background: 'white', 
-                  borderRadius: '12px', 
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.05)',
-                  padding: '12px',
+                  borderRadius: '16px', 
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                  overflow: 'hidden',
                   display: 'flex',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  border: '1px solid var(--stone-light)'
                 }}
-                dangerouslySetInnerHTML={{ __html: sketch }}
-              />
+              >
+                <img 
+                  src={sketch} 
+                  alt="Prototipo Visual" 
+                  style={{ width: '100%', height: 'auto', display: 'block' }}
+                  onError={(e) => {
+                    e.target.src = 'https://via.placeholder.com/800x600?text=Error+cargando+imagen'
+                  }}
+                />
+              </div>
               <button
                 className="btn-ghost"
                 style={{ width: '100%', marginTop: '12px', fontSize: '0.8rem' }}

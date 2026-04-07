@@ -117,13 +117,14 @@ export const atlasEngine = {
       Tu tarea es analizar estas imágenes de una sesión de ideación creativa.
       
       INSTRUCCIONES CRÍTICAS:
-      1. Idioma: TODO EL CONTENIDO DEBE ESTAR EN ESPAÑOL. No traduzcas al inglés bajo ninguna circunstancia.
-      2. Identifica cada post-it o tarjeta individualmente e interpreta el texto manuscrito.
-      3. Extrae la idea principal de cada tarjeta de forma concisa (máximo 60 caracteres).
-      4. Si hay dibujos, interprétalos para complementar la idea.
+      1. Idioma: TODO EL CONTENIDO DEBE ESTAR EN ESPAÑOL.
+      2. Transcripción Literal (OCR): Lee cada post-it o tarjeta y transcribe el texto manuscrito EXACTAMENTE como está escrito. 
+      3. No resumas, no interpretes y no añadas palabras que no estén en la imagen. 
+      4. Si el texto es ilegible, descártalo. No intentes adivinarlo.
       5. Devuelve ÚNICAMENTE un objeto JSON con este formato: 
-      {"ideas": ["texto idea 1", "texto idea 2", ...]}
-      6. No añadas textos explicativos ni markdown fuera del bloque JSON.`
+      {"ideas": ["texto literal 1", "texto literal 2", ...]}
+      6. No añadas textos explicativos ni markdown fuera del bloque JSON.
+      7. No categorices ni agrupes. Solo transcribe.`
 
 
     const imageParts = await Promise.all(
@@ -250,35 +251,34 @@ export const atlasEngine = {
   async generateSketch(sessionId, ideaText, groupContext = '') {
     const model = getModel(GEMINI_MODEL)
 
-    const prompt = `Actúa como 'Nano Banana', un ilustrador minimalista experto en prototipado rápido.
-      Idea a ilustrar: "${ideaText}"
-      Contexto: "${groupContext}"
-
-      TAREA: Genera un dibujo conceptual de esta idea usando únicamente código SVG.
-      REGLAS DE DISEÑO:
-      1. Estilo: Minimalista, "blueprint" o "doodle" profesional.
-      2. Colores: Trazo negro (#1C1917) y detalles en amarillo vibrante (#FFD700). Fondo transparente.
-      3. Formato: Un elemento <svg> con viewBox="0 0 400 400".
-      4. Usa formas básicas (<path>, <circle>, <rect>, <line>) para representar la idea de forma icónica.
-      5. Responde EXCLUSIVAMENTE con el código <svg> puro. No incluyas markdown (sin \`\`\`svg).`
+    // First, we ask Gemini to create a professional image generation prompt in English for better results
+    const promptForAI = `
+      Based on this creative idea in Spanish: "${ideaText}"
+      And this context: "${groupContext}"
+      
+      Generate a professional, highly detailed image generation prompt in ENGLISH.
+      Style: Professional prototype, clean design, 3D render or high-quality illustration.
+      Theme: Corporate innovation, product design, or clear conceptual visualization.
+      Constraints: No text inside the image. Vibrant colors.
+      
+      Return ONLY the English prompt string. Nothing else.`
 
     try {
-      const result = await model.generateContent(prompt)
-      const response = await result.response
-      const text = response.text()
+      const result = await model.generateContent(promptForAI)
+      const imagePrompt = (await result.response).text().trim()
       
-      const svgMatch = text.match(/<svg[\s\S]*<\/svg>/)
-      const svgCode = svgMatch ? svgMatch[0] : null
-      
-      if (!svgCode) throw new Error("No se pudo generar el trazado visual.")
+      // We use Pollinations.ai for a real JPG-style image generation
+      const seed = Math.floor(Math.random() * 1000000)
+      const encodedPrompt = encodeURIComponent(imagePrompt)
+      const imageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=800&height=600&seed=${seed}&model=flux&nologo=true`
 
-      // Guardamos el SVG como resultado
+      // Guardamos la URL en el campo sketch_b64 (mismo nombre para evitar cambios en DB)
       const { error } = await supabase
         .from('results')
-        .upsert({ session_id: sessionId, sketch_b64: svgCode })
+        .upsert({ session_id: sessionId, sketch_b64: imageUrl })
 
       if (error) throw error
-      return { sketch_svg: svgCode }
+      return { sketch_url: imageUrl }
     } catch (e) {
       console.error('Error in generateSketch:', e)
       throw e
