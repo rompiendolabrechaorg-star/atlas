@@ -12,17 +12,20 @@ const cleanKey = (k) => {
 export const getGeminiKey = () => {
   const localKey = localStorage.getItem('atlas_gemini_key');
   const envKey = import.meta.env.VITE_GEMINI_API_KEY;
-  
-  // Prioritize local storage (explicitly set by user) then environment (system secret)
   const key = cleanKey(localKey) || cleanKey(envKey);
   return key;
 }
 export const setGeminiKey = (key) => localStorage.setItem('atlas_gemini_key', cleanKey(key))
 
 /**
+ * Centralized Model configuration
+ */
+export const GEMINI_MODEL = "gemini-1.5-flash";
+
+/**
  * Initialize Gemini dynamically
  */
-const getModel = (modelName = "gemini-1.5-flash") => {
+const getModel = (modelName = GEMINI_MODEL) => {
   const key = getGeminiKey();
   if (!key) {
     console.error("❌ [Atlas] Error: No API Key found.");
@@ -30,7 +33,7 @@ const getModel = (modelName = "gemini-1.5-flash") => {
   }
   
   // Debug: Show start and end to verify cache isn't serving an old key
-  console.log(`[Atlas] IA Init (v5.0 - NEXT GEN 2026). Key: ${key.slice(0,6)}...${key.slice(-4)} (Len: ${key.length})`);
+  console.log(`[Atlas] IA Init (v5.6 - STABLE). Key: ${key.slice(0,6)}...${key.slice(-4)} (Len: ${key.length})`);
   
   // Explicitly force v1beta for maximum compatibility
   const genAI = new GoogleGenerativeAI(key);
@@ -39,7 +42,7 @@ const getModel = (modelName = "gemini-1.5-flash") => {
 }
 
 /**
- * Live Connection Test (v5.0 - Ultra Robust)
+ * Live Connection Test (v5.6 - Ultra Robust)
  */
 export const testGeminiConnection = async (tempKey = null) => {
   try {
@@ -50,7 +53,7 @@ export const testGeminiConnection = async (tempKey = null) => {
     console.log(`[Atlas] Validando llave: ${key.slice(0,6)}... (v2.5)`);
     
     const genAI = new GoogleGenerativeAI(key);
-    const model = genAI.getGenerativeModel({ model: "models/gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: `models/${GEMINI_MODEL}` });
     
     // Configurar timeout manual de 20s para el test
     const controller = new AbortController();
@@ -72,13 +75,13 @@ export const testGeminiConnection = async (tempKey = null) => {
   }
 }
 
-console.log("🚀 Atlas Engine v5.0 - NEXT GEN 2026 ACTIVE");
+console.log("🚀 Atlas Engine v5.6 - STABLE ACTIVE");
 
 export const atlasEngine = {
   
   /**
-   * Create a new session record in Supabase
-   */
+    * Create a new session record in Supabase
+    */
   async createSession(adminId, context, voteLimit) {
     const code = Math.random().toString(36).substring(2, 8).toUpperCase()
     const sessionId = window.crypto.randomUUID()
@@ -105,10 +108,10 @@ export const atlasEngine = {
   },
 
   /**
-   * Analyze group images using Gemini OCR
-   */
+    * Analyze group images using Gemini OCR
+    */
   async analyzeImages(sessionId, groupId, files) {
-    const model = getModel("gemini-2.5-flash")
+    const model = getModel(GEMINI_MODEL)
     const prompt = `
       Eres un experto en facilitación visual y metodología Manual Thinking.
       Tu tarea es analizar estas imágenes de una sesión de ideación creativa.
@@ -185,10 +188,10 @@ export const atlasEngine = {
   },
 
   /**
-   * Phase 2: AI Classification of ideas into categories
-   */
+    * Phase 2: AI Classification of ideas into categories
+    */
   async autoClassifyIdeas(sessionId) {
-    const model = getModel("gemini-2.5-flash")
+    const model = getModel(GEMINI_MODEL)
 
     const { data: session } = await supabase.from('sessions').select('context').eq('id', sessionId).single()
     const { data: ideas } = await supabase.from('ideas').select('id, content').eq('session_id', sessionId)
@@ -236,10 +239,10 @@ export const atlasEngine = {
   },
 
   /**
-   * Phase 4: Generate sketch prompt for an idea
-   */
+    * Phase 4: Generate sketch prompt for an idea
+    */
   async generateSketch(sessionId, ideaText, groupContext = '') {
-    const model = getModel("gemini-2.0-flash")
+    const model = getModel(GEMINI_MODEL)
 
     const prompt = `
       Genera una descripción visual breve y creativa para ilustrar esta idea: "${ideaText}"
@@ -249,7 +252,8 @@ export const atlasEngine = {
     `
 
     const result = await model.generateContent(prompt)
-    return { sketch_prompt: (await result.response).text() }
+    const response = await result.response
+    return { sketch_prompt: response.text() }
   }
 }
 
