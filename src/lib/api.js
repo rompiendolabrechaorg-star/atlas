@@ -161,24 +161,17 @@ export async function getResults(sessionId) {
 }
 
 export async function updateIdea(ideaId, text, drawingDescription) {
-  const updates = {}
-  if (text !== undefined) {
-    updates.content = text
-    updates.text = text
+  const updates = {
+    content: text
   }
-  // drawing_description might not exist in all DB schemas, but it's used in Phase 4.
-  // We include it only if it's provided and not null.
-  if (drawingDescription) updates.drawing_description = drawingDescription
   
-  const { data, error } = await supabase.from('ideas').update(updates).eq('id', ideaId).select()
+  // Minimal update to avoid column errors
+  const { error } = await supabase.from('ideas').update(updates).eq('id', ideaId)
   if (error) {
     console.error("Supabase Save Error:", error)
     throw error
   }
-  if (!data || data.length === 0) {
-    throw new Error("No se pudo encontrar la idea para actualizar. Verifique que el ID sea correcto.")
-  }
-  return { ok: true, data: data[0] }
+  return { ok: true }
 }
 
 export async function deleteIdea(ideaId) {
